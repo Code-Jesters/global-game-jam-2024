@@ -19,3 +19,9 @@
 .vs/
 */__pycache__/
 ino2obj.stdout
+
+# WebGL Publisher
+/WebGL Builds/**
+connectwebgl.zip
+# Optional, but I don't like having my build folder added to this public repo
+ProjectSettings/Packages/com.unity.connect.share/Settings.json
