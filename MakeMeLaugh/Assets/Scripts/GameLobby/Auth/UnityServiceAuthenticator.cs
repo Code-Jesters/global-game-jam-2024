@@ -24,7 +24,9 @@ namespace Unity.Services.Samples
         public static async Task<bool> TryInitServicesAsync(string profileName = null)
         {
             if (UnityServices.State == ServicesInitializationState.Initialized)
+            {
                 return true;
+            }
 
             //Another Service is mid-initialization:
             if (UnityServices.State == ServicesInitializationState.Initializing)
@@ -47,14 +49,18 @@ namespace Unity.Services.Samples
                 await UnityServices.InitializeAsync(authProfile);
             }
             else
+            {
                 await UnityServices.InitializeAsync();
+            }
 
             return UnityServices.State == ServicesInitializationState.Initialized;
 
             async Task WaitForInitialized()
             {
                 while (UnityServices.State != ServicesInitializationState.Initialized)
+                {
                     await Task.Delay(100);
+                }
             }
         }
 
@@ -66,7 +72,9 @@ namespace Unity.Services.Samples
             {
                 var task = WaitForSignedIn();
                 if (await Task.WhenAny(task, Task.Delay(k_InitTimeout)) != task)
+                {
                     return false; // We timed out
+                }
                 return AuthenticationService.Instance.IsSignedIn;
             }
 
@@ -79,7 +87,9 @@ namespace Unity.Services.Samples
             async Task WaitForSignedIn()
             {
                 while (!AuthenticationService.Instance.IsSignedIn)
+                {
                     await Task.Delay(100);
+                }
             }
         }
     }

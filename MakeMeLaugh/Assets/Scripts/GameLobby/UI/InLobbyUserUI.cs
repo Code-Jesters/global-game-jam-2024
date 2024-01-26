@@ -2,6 +2,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+// Turning this off intentionally.
+// #define CODEJESTERS_USE_VIVOX
+
 namespace LobbyRelaySample.UI
 {
     /// <summary>
@@ -24,8 +27,10 @@ namespace LobbyRelaySample.UI
         [SerializeField]
         Sprite[] m_EmoteIcons;
 
+#if CODEJESTERS_USE_VIVOX
         [SerializeField]
         vivox.VivoxUserHandler m_VivoxUserHandler;
+#endif
 
         public bool IsAssigned => UserId != null;
         public string UserId { get; set; }
@@ -42,7 +47,9 @@ namespace LobbyRelaySample.UI
             SetDisplayName(m_LocalPlayer.DisplayName.Value);
             SubscribeToPlayerUpdates();
 
+#if CODEJESTERS_USE_VIVOX
             m_VivoxUserHandler.SetId(UserId);
+#endif
         }
 
         void SubscribeToPlayerUpdates()

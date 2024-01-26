@@ -1,6 +1,13 @@
 ﻿using UnityEngine;
+
+// Turning this off intentionally.
+// #define CODEJESTERS_USE_VIVOX
+
+
+#if CODEJESTERS_USE_VIVOX
 using Unity.Services.Vivox;
 using VivoxUnity;
+#endif
 
 namespace LobbyRelaySample.vivox
 {
@@ -13,7 +20,9 @@ namespace LobbyRelaySample.vivox
         [SerializeField]
         private UI.LobbyUserVolumeUI m_lobbyUserVolumeUI;
 
+#if CODEJESTERS_USE_VIVOX
         private IChannelSession m_channelSession;
+#endif
         private string m_id;
         private string m_vivoxId;
 
@@ -43,6 +52,7 @@ namespace LobbyRelaySample.vivox
             m_vivoxId = null;
 
             // SetID might be called after we've received the IChannelSession for remote players, which would mean after OnParticipantAdded. So, duplicate the VivoxID work here.
+#if CODEJESTERS_USE_VIVOX
             if (m_channelSession != null)
             {
                 foreach (var participant in m_channelSession.Participants)
@@ -56,8 +66,10 @@ namespace LobbyRelaySample.vivox
                     }
                 }
             }
+#endif
         }
 
+#if CODEJESTERS_USE_VIVOX
         public void OnChannelJoined(IChannelSession channelSession) // Called after a connection is established, which begins once a lobby is joined.
         {
             //Check if we are muted or not
@@ -67,9 +79,11 @@ namespace LobbyRelaySample.vivox
             m_channelSession.Participants.BeforeKeyRemoved += BeforeParticipantRemoved;
             m_channelSession.Participants.AfterValueUpdated += OnParticipantValueUpdated;
         }
+#endif
 
         public void OnChannelLeft() // Called when we leave the lobby.
         {
+#if CODEJESTERS_USE_VIVOX
             if (m_channelSession != null) // It's possible we'll attempt to leave a channel that isn't joined, if we leave the lobby while Vivox is connecting.
             {
                 m_channelSession.Participants.AfterKeyAdded -= OnParticipantAdded;
@@ -77,11 +91,13 @@ namespace LobbyRelaySample.vivox
                 m_channelSession.Participants.AfterValueUpdated -= OnParticipantValueUpdated;
                 m_channelSession = null;
             }
+#endif
         }
 
         /// <summary>
         /// To be called whenever a new Participant is added to the channel, using the events from Vivox's custom dictionary.
         /// </summary>
+#if CODEJESTERS_USE_VIVOX
         private void OnParticipantAdded(object sender, KeyEventArg<string> keyEventArg)
         {
             var source = (VivoxUnity.IReadOnlyDictionary<string, IParticipant>)sender;
@@ -152,9 +168,11 @@ namespace LobbyRelaySample.vivox
                 }
             }
         }
+#endif
 
         public void OnVolumeSlide(float volumeNormalized)
         {
+#if CODEJESTERS_USE_VIVOX
             if (m_channelSession == null || m_vivoxId == null) // Verify initialization, since SetId and OnChannelJoined are called at different times for local vs. remote clients.
                 return;
 
@@ -168,10 +186,12 @@ namespace LobbyRelaySample.vivox
             {
                 m_channelSession.Participants[m_vivoxId].LocalVolumeAdjustment = vol;
             }
+#endif
         }
 
         public void OnMuteToggle(bool isMuted)
         {
+#if CODEJESTERS_USE_VIVOX
             if (m_channelSession == null || m_vivoxId == null)
                 return;
 
@@ -184,6 +204,7 @@ namespace LobbyRelaySample.vivox
             {
                 m_channelSession.Participants[m_vivoxId].LocalMute = isMuted;
             }
+#endif
         }
     }
 }

@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+// Turning this off intentionally.
+// #define CODEJESTERS_USE_VIVOX
+
 namespace LobbyRelaySample.UI
 {
     public class LobbyUserVolumeUI : MonoBehaviour
@@ -29,7 +32,10 @@ namespace LobbyRelaySample.UI
         public void EnableVoice(bool shouldResetUi)
         {
             if (shouldResetUi)
-            {   m_volumeSlider.SetValueWithoutNotify(vivox.VivoxUserHandler.NormalizedVolumeDefault);
+            {
+#if CODEJESTERS_USE_VIVOX
+                m_volumeSlider.SetValueWithoutNotify(vivox.VivoxUserHandler.NormalizedVolumeDefault);
+#endif
                 m_muteToggle.SetIsOnWithoutNotify(false);
             }
 
@@ -56,7 +62,10 @@ namespace LobbyRelaySample.UI
         public void DisableVoice(bool shouldResetUi)
         {
             if (shouldResetUi)
-            {   m_volumeSlider.value = vivox.VivoxUserHandler.NormalizedVolumeDefault;
+            {
+#if CODEJESTERS_USE_VIVOX
+                m_volumeSlider.value = vivox.VivoxUserHandler.NormalizedVolumeDefault;
+#endif
                 m_muteToggle.isOn = false;
             }
 

@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: Unity
+  companyName: Code Jesters
   productName: Game-Lobby-Sample
   defaultCursor: {fileID: 2800000, guid: 9367b4ce9024f5b4090fabc2941d2116, type: 3}
   cursorHotspot: {x: 0, y: 0}
@@ -770,4 +770,4 @@ PlayerSettings:
   hmiLoadingImage: {fileID: 0}
   platformRequiresReadableAssets: 0
   virtualTexturingSupportEnabled: 0
-  insecureHttpOption: 0
+  insecureHttpOption: 2

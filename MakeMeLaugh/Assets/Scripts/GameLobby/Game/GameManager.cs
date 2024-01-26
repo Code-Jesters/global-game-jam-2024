@@ -12,8 +12,10 @@ using Unity.Services.Samples;
 using UnityEngine;
 #if UNITY_EDITOR
 using ParrelSync;
-
 #endif
+
+// Turning this off intentionally.
+// #define CODEJESTERS_USE_VIVOX
 
 namespace LobbyRelaySample
 {
@@ -50,9 +52,11 @@ namespace LobbyRelaySample
         LocalPlayer m_LocalUser;
         LocalLobby m_LocalLobby;
 
+#if CODEJESTERS_USE_VIVOX
         vivox.VivoxSetup m_VivoxSetup = new vivox.VivoxSetup();
         [SerializeField]
         List<vivox.VivoxUserHandler> m_vivoxUserHandlers;
+#endif
 
         LobbyColor m_lobbyColorFilter;
 
@@ -292,8 +296,11 @@ namespace LobbyRelaySample
             LobbyManager = new LobbyManager();
 
             await InitializeServices();
+            Debug.Log("DJMC: InitializeServices() all done!");
             AuthenticatePlayer();
+#if CODEJESTERS_USE_VIVOX
             StartVivoxLogin();
+#endif
         }
 
         async Task InitializeServices()
@@ -366,7 +373,9 @@ namespace LobbyRelaySample
             await LobbyManager.BindLocalLobbyToRemote(m_LocalLobby.LobbyID.Value, m_LocalLobby);
             m_LocalLobby.LocalLobbyState.onChanged += OnLobbyStateChanged;
             SetLobbyView();
+#if CODEJESTERS_USE_VIVOX
             StartVivoxJoin();
+#endif
         }
 
         public void LeaveLobby()
@@ -376,10 +385,13 @@ namespace LobbyRelaySample
             LobbyManager.LeaveLobbyAsync();
 #pragma warning restore 4014
             ResetLocalLobby();
+#if CODEJESTERS_USE_VIVOX
             m_VivoxSetup.LeaveLobbyChannel();
+#endif
             LobbyList.Clear();
         }
 
+#if CODEJESTERS_USE_VIVOX
         void StartVivoxLogin()
         {
             m_VivoxSetup.Initialize(m_vivoxUserHandlers, OnVivoxLoginComplete);
@@ -407,6 +419,7 @@ namespace LobbyRelaySample
                 }
             }
         }
+#endif
 
         IEnumerator RetryConnection(Action doConnection, string lobbyId)
         {

@@ -2,8 +2,14 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Services.Authentication;
+
+// Turning this off intentionally.
+// #define CODEJESTERS_USE_VIVOX
+
+#if CODEJESTERS_USE_VIVOX
 using Unity.Services.Vivox;
 using VivoxUnity;
+#endif
 
 namespace LobbyRelaySample.vivox
 {
@@ -14,14 +20,17 @@ namespace LobbyRelaySample.vivox
     {
         private bool m_hasInitialized = false;
         private bool m_isMidInitialize = false;
+#if CODEJESTERS_USE_VIVOX
         private ILoginSession m_loginSession = null;
         private IChannelSession m_channelSession = null;
         private List<VivoxUserHandler> m_userHandlers;
+#endif
 
         /// <summary>
         /// Initialize the Vivox service, before actually joining any audio channels.
         /// </summary>
         /// <param name="onComplete">Called whether the login succeeds or not.</param>
+#if CODEJESTERS_USE_VIVOX
         public void Initialize(List<VivoxUserHandler> userHandlers, Action<bool> onComplete)
         {
             if (m_isMidInitialize)
@@ -53,6 +62,7 @@ namespace LobbyRelaySample.vivox
                 }
             });
         }
+#endif
 
         /// <summary>
         /// Once in a lobby, start joining a voice channel for that lobby. Be sure to complete Initialize first.
@@ -60,6 +70,7 @@ namespace LobbyRelaySample.vivox
         /// <param name="onComplete">Called whether the channel is successfully joined or not.</param>
         public void JoinLobbyChannel(string lobbyId, Action<bool> onComplete)
         {
+#if CODEJESTERS_USE_VIVOX
             if (!m_hasInitialized || m_loginSession.State != LoginState.LoggedIn)
             {
                 UnityEngine.Debug.LogWarning("Can't join a Vivox audio channel, as Vivox login hasn't completed yet.");
@@ -90,7 +101,9 @@ namespace LobbyRelaySample.vivox
                     m_channelSession.EndConnect(result);
                     onComplete?.Invoke(true);
                     foreach (VivoxUserHandler userHandler in m_userHandlers)
+                    {
                         userHandler.OnChannelJoined(m_channelSession);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -99,6 +112,7 @@ namespace LobbyRelaySample.vivox
                     m_channelSession?.Disconnect();
                 }
             });
+#endif
         }
 
         /// <summary>
@@ -106,6 +120,7 @@ namespace LobbyRelaySample.vivox
         /// </summary>
         public void LeaveLobbyChannel()
         {
+#if CODEJESTERS_USE_VIVOX
             if (m_channelSession != null)
             {
                 // Special case: The EndConnect call requires a little bit of time before the connection actually completes, but the player might
@@ -129,7 +144,10 @@ namespace LobbyRelaySample.vivox
             }
 
             foreach (VivoxUserHandler userHandler in m_userHandlers)
+            {
                 userHandler.OnChannelLeft();
+            }
+#endif
         }
 
         private void HandleEarlyDisconnect()
@@ -139,6 +157,7 @@ namespace LobbyRelaySample.vivox
 
         async void DisconnectOnceConnected()
         {
+#if CODEJESTERS_USE_VIVOX
             while (m_channelSession?.ChannelState == ConnectionState.Connecting)
             {
                 await Task.Delay(200);
@@ -146,6 +165,7 @@ namespace LobbyRelaySample.vivox
             }
 
             LeaveLobbyChannel();
+#endif
         }
 
         /// <summary>
@@ -153,9 +173,13 @@ namespace LobbyRelaySample.vivox
         /// </summary>
         public void Uninitialize()
         {
+#if CODEJESTERS_USE_VIVOX
             if (!m_hasInitialized)
+            {
                 return;
+            }
             m_loginSession.Logout();
+#endif
         }
     }
 }
