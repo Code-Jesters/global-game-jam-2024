@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 
+using UnityEngine; // for Debug.Log()
+
 namespace Unity.Services.Samples
 {
     /// <summary>
@@ -23,8 +25,10 @@ namespace Unity.Services.Samples
         /// <returns></returns>
         public static async Task<bool> TryInitServicesAsync(string profileName = null)
         {
+            Debug.Log("TryInitServicesAsync() start");
             if (UnityServices.State == ServicesInitializationState.Initialized)
             {
+                Debug.Log("TryInitServicesAsync() already true");
                 return true;
             }
 
@@ -33,8 +37,12 @@ namespace Unity.Services.Samples
             {
                 var task = WaitForInitialized();
                 if (await Task.WhenAny(task, Task.Delay(k_InitTimeout)) != task)
+                {
+                    Debug.Log("TryInitServicesAsync() timed out");
                     return false; // We timed out
+                }
 
+                Debug.Log("TryInitServicesAsync() concluding " + (UnityServices.State == ServicesInitializationState.Initialized));
                 return UnityServices.State == ServicesInitializationState.Initialized;
             }
 
@@ -46,28 +54,37 @@ namespace Unity.Services.Samples
                 var authProfile = new InitializationOptions().SetProfile(profileName);
 
                 //If you are using multiple unity services, make sure to initialize it only once before using your services.
+                Debug.Log("TryInitServicesAsync() calling UnityServices.InitializeAsync() w/ auth profile");
                 await UnityServices.InitializeAsync(authProfile);
+                Debug.Log("UnityServices.InitializeAsync() w/ auth profile has finished");
             }
             else
             {
+                Debug.Log("TryInitServicesAsync() calling UnityServices.InitializeAsync() w/out auth profile");
                 await UnityServices.InitializeAsync();
             }
 
+            Debug.Log("TryInitServicesAsync() reached end; concluding " + (UnityServices.State == ServicesInitializationState.Initialized));
             return UnityServices.State == ServicesInitializationState.Initialized;
 
             async Task WaitForInitialized()
             {
+                Debug.Log("WaitForInitialized() start");
                 while (UnityServices.State != ServicesInitializationState.Initialized)
                 {
                     await Task.Delay(100);
                 }
+                Debug.Log("WaitForInitialized() reached end");
             }
         }
 
         public static async Task<bool> TrySignInAsync(string profileName = null)
         {
+            Debug.Log("TrySignInAsync() start");
             if (!await TryInitServicesAsync(profileName))
+            {
                 return false;
+            }
             if (s_IsSigningIn)
             {
                 var task = WaitForSignedIn();
