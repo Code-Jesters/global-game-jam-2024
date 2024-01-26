@@ -6,6 +6,7 @@
 [Bb]uilds/
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
+WebGL Builds/
 *.csproj
 *.unityproj
 *.sln
