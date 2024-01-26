@@ -38,7 +38,9 @@ namespace LobbyRelaySample.UI
             {
                 Show();
                 m_spinnerImage.Show();
+                /* DJMC disabling
                 m_raycastBlocker.Show();
+                //*/
                 m_noServerText.Hide();
                 m_errorTextVisibility.Hide();
             }
