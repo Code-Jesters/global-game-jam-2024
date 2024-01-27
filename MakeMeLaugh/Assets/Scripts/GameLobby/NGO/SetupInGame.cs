@@ -48,12 +48,14 @@ namespace LobbyRelaySample.ngo
             if (localPlayer.IsHost.Value)
             {
                 await SetRelayHostData();
+                Debug.Log("NetworkManager.Singleton.StartHost()");
                 NetworkManager.Singleton.StartHost();
             }
             else
             {
                 await AwaitRelayCode(localLobby);
                 await SetRelayClientData();
+                Debug.Log("NetworkManager.Singleton.StartClient()");
                 NetworkManager.Singleton.StartClient();
             }
         }

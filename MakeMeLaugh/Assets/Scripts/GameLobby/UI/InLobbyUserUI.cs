@@ -77,10 +77,12 @@ namespace LobbyRelaySample.UI
         public void ResetUI()
         {
             if (m_LocalPlayer == null)
+            {
                 return;
+            }
             UserId = null;
             SetEmote(EmoteType.None);
-            SetUserStatus(PlayerStatus.Lobby);
+            SetUserStatus(PlayerStatus.LobbyReady);
             Hide();
             UnsubscribeToPlayerUpdates();
             m_LocalPlayer = null;
@@ -141,9 +143,10 @@ namespace LobbyRelaySample.UI
         {
             switch (status)
             {
-                case PlayerStatus.Lobby:
-                    return "<color=#56B4E9>In Lobby</color>"; // Light Blue
-                case PlayerStatus.Ready:
+                //case PlayerStatus.Lobby:
+                //    return "<color=#56B4E9>In Lobby</color>"; // Light Blue
+                //case PlayerStatus.Ready:
+                case PlayerStatus.LobbyReady:
                     return "<color=#009E73>Ready</color>"; // Light Mint
                 case PlayerStatus.Connecting:
                     return "<color=#F0E442>Connecting...</color>"; // Bright Yellow
