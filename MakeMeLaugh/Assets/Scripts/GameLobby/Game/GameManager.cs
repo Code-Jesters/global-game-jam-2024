@@ -187,6 +187,7 @@ namespace LobbyRelaySample
 
         async void SendLocalLobbyData()
         {
+            Debug.Log("GameManager.SendLocalLobbyData()");
             await LobbyManager.UpdateLobbyDataAsync(LobbyConverters.LocalToRemoteLobbyData(m_LocalLobby));
         }
 
@@ -211,6 +212,7 @@ namespace LobbyRelaySample
 
         public void HostSetRelayCode(string code)
         {
+            Debug.Log("GameManager.HostSetRelayCode(" + code + ")");
             m_LocalLobby.RelayCode.Value = code;
             SendLocalLobbyData();
         }

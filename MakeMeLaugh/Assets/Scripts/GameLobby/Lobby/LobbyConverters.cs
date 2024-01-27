@@ -45,6 +45,7 @@ namespace LobbyRelaySample.lobby
         /// </summary>
         public static void RemoteToLocal(Lobby remoteLobby, LocalLobby localLobby)
         {
+            Debug.Log("LobbyConverters.RemoteToLocal(" + remoteLobby + ", " + localLobby + ")");
             if (remoteLobby == null)
             {
                 Debug.LogError("Remote lobby is null, cannot convert.");
@@ -66,7 +67,9 @@ namespace LobbyRelaySample.lobby
             localLobby.MaxPlayerCount.Value = remoteLobby.MaxPlayers;
             localLobby.LastUpdated.Value = remoteLobby.LastUpdated.ToFileTimeUtc();
 
-            //Custom Lobby Data Conversions
+            // Custom Lobby Data Conversions
+            Debug.Log("LobbyConverters.RemoteToLocal() changing RelayCode -- old value \"" + localLobby.RelayCode.Value +
+                "\", remoteLobby.Data?.ContainsKey(key_RelayCode) is " + (remoteLobby.Data?.ContainsKey(key_RelayCode)));
             localLobby.RelayCode.Value = remoteLobby.Data?.ContainsKey(key_RelayCode) == true
                 ? remoteLobby.Data[key_RelayCode].Value
                 : localLobby.RelayCode.Value;

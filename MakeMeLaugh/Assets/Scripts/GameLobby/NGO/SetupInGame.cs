@@ -70,13 +70,26 @@ namespace LobbyRelaySample.ngo
             Debug.Log("AwaitRelayCode(" + lobby + ")");
             string relayCode = lobby.RelayCode.Value;
             lobby.RelayCode.onChanged += (code) => {
-                Debug.Log("lobby.RelayCode.onChanged(" + code + ")");
-                relayCode = code;
+                // DJMC: Ignore it if we receive a bad relay code.
+                if (!string.IsNullOrEmpty(code))
+                {
+                    Debug.Log("lobby.RelayCode.onChanged(" + code + ")");
+                    relayCode = code;
+                }
+                else
+                {
+                    Debug.Log("lobby.RelayCode.onChanged() received a null-or-empty relay code");
+                }
             };
             while (string.IsNullOrEmpty(relayCode))
             {
-                await Task.Delay(100);
+                var delay = 1000; // 100
+                //await Task.Delay(delay);
+                // DJMC: see https://stackoverflow.com/questions/24525559/task-delay-never-completing
+                await Task.Delay(delay).ConfigureAwait(false);
+                Debug.Log("AwaitRelayCode() loop...");
             }
+            Debug.Log("AwaitRelayCode() finished");
         }
 
         async Task SetRelayHostData()
@@ -148,6 +161,7 @@ namespace LobbyRelaySample.ngo
 
         void OnConnectionVerified()
         {
+            Debug.Log("SetupInGame.OnConnectionVerified()");
             m_hasConnectedViaNGO = true;
         }
 
@@ -163,6 +177,7 @@ namespace LobbyRelaySample.ngo
 
         public void OnGameBegin()
         {
+            Debug.Log("SetupInGame.OnGameBegin() -- testing m_hasConnectedViaNGO (" + m_hasConnectedViaNGO + ")");
             if (!m_hasConnectedViaNGO)
             {
                 // If this localPlayer hasn't successfully connected via NGO, forcibly exit the minigame.
@@ -176,6 +191,7 @@ namespace LobbyRelaySample.ngo
         /// </summary>
         public void OnGameEnd()
         {
+            Debug.Log("SetupInGame.OnGameEnd()");
             if (m_doesNeedCleanup)
             {
                 NetworkManager.Singleton.Shutdown(true);

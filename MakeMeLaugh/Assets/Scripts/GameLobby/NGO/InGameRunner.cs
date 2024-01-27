@@ -39,7 +39,7 @@ namespace LobbyRelaySample.ngo
         private Queue<Vector2> m_pendingSymbolPositions = new Queue<Vector2>();
         private float m_symbolSpawnTimer = 0.5f; // Initial time buffer to ensure connectivity before loading objects.
         private int m_remainingSymbolCount = 0; // Only used by the host.
-        private float m_timeout = 10;
+        private float m_timeout = 20; // 10; // DJMC: giving this more time for matchmaking
         private bool m_hasConnected = false;
 
         [SerializeField]
@@ -191,7 +191,10 @@ namespace LobbyRelaySample.ngo
             {
                 m_timeout -= Time.deltaTime;
                 if (m_timeout < 0)
+                {
+                    Debug.Log("InGameRunner.Update() -- m_timeout hit; calling BeginGame()...");
                     BeginGame();
+                }
             }
 
             void CheckIfCanSpawnNewSymbol()

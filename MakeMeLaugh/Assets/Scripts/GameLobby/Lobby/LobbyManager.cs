@@ -201,7 +201,10 @@ namespace LobbyRelaySample
                     var changedKey = change.Key;
 
                     if (changedKey == key_RelayCode)
+                    {
+                        Debug.Log("LobbyManager.BindLocalLobbyToRemote() -- DataChanged -- setting RelayCode to " + changedValue.Value.Value);
                         localLobby.RelayCode.Value = changedValue.Value.Value;
+                    }
 
                     if (changedKey == key_LobbyState)
                         localLobby.LocalLobbyState.Value = (LobbyState)int.Parse(changedValue.Value.Value);
@@ -219,7 +222,10 @@ namespace LobbyRelaySample
                     var changedKey = change.Key;
 
                     if (changedKey == key_RelayCode)
+                    {
+                        Debug.Log("LobbyManager.BindLocalLobbyToRemote() -- DataAdded -- setting RelayCode to " + changedValue.Value.Value);
                         localLobby.RelayCode.Value = changedValue.Value.Value;
+                    }
 
                     if (changedKey == key_LobbyState)
                         localLobby.LocalLobbyState.Value = (LobbyState)int.Parse(changedValue.Value.Value);
@@ -235,7 +241,10 @@ namespace LobbyRelaySample
                 {
                     var changedKey = change.Key;
                     if (changedKey == key_RelayCode)
+                    {
+                        Debug.Log("LobbyManager.BindLocalLobbyToRemote() -- DataRemoved -- clearing RelayCode");
                         localLobby.RelayCode.Value = "";
+                    }
                 }
             };
 
