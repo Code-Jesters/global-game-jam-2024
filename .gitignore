@@ -26,3 +26,6 @@ ino2obj.stdout
 connectwebgl.zip
 # Optional, but I don't like having my build folder added to this public repo
 ProjectSettings/Packages/com.unity.connect.share/Settings.json
+
+# See https://forum.unity.com/threads/link-xml-part-of-version-control.1227360/#post-8190567
+MakeMeLaugh/Assets/AddressableAssetsData/link.xml*
