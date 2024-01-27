@@ -105,7 +105,7 @@ public class HostJoinUI : MonoBehaviour
         var sanitizedPortText = Sanitize(m_PortTextField.text);
 
         ushort.TryParse(sanitizedPortText, out var port);
-        
+
         var utp = (UnityTransport)NetworkManager.Singleton.NetworkConfig.NetworkTransport;
         utp.SetConnectionData(sanitizedIPText, port);
     }

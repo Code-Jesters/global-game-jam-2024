@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Networking.Transport;
+using Unity.Networking.Transport.Relay;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
@@ -75,6 +76,7 @@ namespace LobbyRelaySample.ngo
             UnityTransport transport = NetworkManager.Singleton.GetComponentInChildren<UnityTransport>();
 
             var allocation = await Relay.Instance.CreateAllocationAsync(m_lobby.MaxPlayerCount.Value);
+
             var joincode = await Relay.Instance.GetJoinCodeAsync(allocation.AllocationId);
             GameManager.Instance.HostSetRelayCode(joincode);
 
@@ -84,6 +86,9 @@ namespace LobbyRelaySample.ngo
 
             transport.SetHostRelayData(AddressFromEndpoint(endpoint), endpoint.Port,
                 allocation.AllocationIdBytes, allocation.Key, allocation.ConnectionData, isSecure);
+
+            // DJMC -- added to better support websockets as per https://docs.unity.com/ugs/manual/relay/manual/relay-and-ngo
+            transport.SetRelayServerData(new RelayServerData(allocation, "wss"));
         }
 
         async Task SetRelayClientData()
@@ -98,13 +103,16 @@ namespace LobbyRelaySample.ngo
             transport.SetClientRelayData(AddressFromEndpoint(endpoint), endpoint.Port,
                 joinAllocation.AllocationIdBytes, joinAllocation.Key,
                 joinAllocation.ConnectionData, joinAllocation.HostConnectionData, isSecure);
+
+            // DJMC -- added to better support websockets as per https://docs.unity.com/ugs/manual/relay/manual/relay-and-ngo
+            transport.SetRelayServerData(new RelayServerData(joinAllocation, "wss"));
         }
 
         /// <summary>
         /// Determine the server endpoint for connecting to the Relay server, for either an Allocation or a JoinAllocation.
         /// If DTLS encryption is available, and there's a secure server endpoint available, use that as a secure connection. Otherwise, just connect to the Relay IP unsecured.
         /// </summary>
-        NetworkEndPoint GetEndpointForAllocation(
+        NetworkEndpoint GetEndpointForAllocation(
             List<RelayServerEndpoint> endpoints,
             string ip,
             int port,
@@ -116,15 +124,15 @@ namespace LobbyRelaySample.ngo
                 if (endpoint.Secure && endpoint.Network == RelayServerEndpoint.NetworkOptions.Udp)
                 {
                     isSecure = true;
-                    return NetworkEndPoint.Parse(endpoint.Host, (ushort)endpoint.Port);
+                    return NetworkEndpoint.Parse(endpoint.Host, (ushort)endpoint.Port);
                 }
             }
 #endif
             isSecure = false;
-            return NetworkEndPoint.Parse(ip, (ushort)port);
+            return NetworkEndpoint.Parse(ip, (ushort)port);
         }
 
-        string AddressFromEndpoint(NetworkEndPoint endpoint)
+        string AddressFromEndpoint(NetworkEndpoint endpoint)
         {
             return endpoint.Address.Split(':')[0];
         }

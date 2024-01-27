@@ -784,6 +784,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 1765689956051871792, guid: b963f71e4874d4066bc72b9224e3ffce, type: 3}
+      propertyPath: m_UseWebSockets
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1765689956051871792, guid: b963f71e4874d4066bc72b9224e3ffce, type: 3}
       propertyPath: ConnectionData.ServerListenAddress
       value: 127.0.0.1
       objectReference: {fileID: 0}
