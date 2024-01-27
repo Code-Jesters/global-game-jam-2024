@@ -96,52 +96,54 @@ public class MeshMate
     //---------------------------------------------------------------------------
     public bool GetTriangleEdgeNeighbor(EdgeIndexPair edgeIndices, int currentFaceIdx, out int faceIdx)
     {
-        int startIdx = triangles[edgeIndices.index1];
-        int endIdx = triangles[edgeIndices.index2];
+        // int startIdx = triangles[edgeIndices.index1];
+        // int endIdx = triangles[edgeIndices.index2];
+        int startIdx = edgeIndices.index1;
+        int endIdx = edgeIndices.index2;
 
-        int vertIdx = -1;
+        int triIndex = -1;
         for (int i = 0; i < triangles.Length; i += 3)
         {
-            if (i == currentFaceIdx) continue;
-            if (triangles[i] == startIdx && triangles[i + 1] == triangles[endIdx])
+            if (i == (currentFaceIdx * 3)) continue;
+            if (triangles[i] == startIdx && triangles[i + 1] == endIdx)
             {
-                vertIdx = i;
+                triIndex = i;
                 break;
             }
 
-            if (triangles[i] == triangles[endIdx] && triangles[i + 1] == triangles[startIdx])
+            if (triangles[i] == endIdx && triangles[i + 1] == startIdx)
             {
-                vertIdx = i;
+                triIndex = i;
                 break;
             }
 
-            if (triangles[i + 1] == triangles[startIdx] && triangles[i + 2] == triangles[endIdx])
+            if (triangles[i + 1] == startIdx && triangles[i + 2] == endIdx)
             {
-                vertIdx = i;
+                triIndex = i;
                 break;
             }
 
-            if (triangles[i + 1] == triangles[endIdx] && triangles[i + 2] == triangles[startIdx])
+            if (triangles[i + 1] == endIdx && triangles[i + 2] == startIdx)
             {
-                vertIdx = i;
+                triIndex = i;
                 break;
             }
 
-            if (triangles[i + 2] == triangles[startIdx] && triangles[i] == triangles[endIdx])
+            if (triangles[i + 2] == startIdx && triangles[i] == endIdx)
             {
-                vertIdx = i;
+                triIndex = i;
                 break;
             }
 
-            if (triangles[i + 2] == triangles[endIdx] && triangles[i] == triangles[startIdx])
+            if (triangles[i + 2] == endIdx && triangles[i] == startIdx)
             {
-                vertIdx = i;
+                triIndex = i;
                 break;
             }
         }
 
-        faceIdx = vertIdx / 3;
-        return (vertIdx != -1);
+        faceIdx = triIndex / 3;
+        return (triIndex != -1);
     }
 
     //---------------------------------------------------------------------------
