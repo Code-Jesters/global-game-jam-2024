@@ -51,7 +51,10 @@ namespace LobbyRelaySample.ngo
         {
             get
             {
-                if (s_Instance!) return s_Instance;
+                if (s_Instance!)
+                {
+                    return s_Instance;
+                }
                 return s_Instance = FindObjectOfType<InGameRunner>();
             }
         }
@@ -98,7 +101,9 @@ namespace LobbyRelaySample.ngo
                 m_collider.bounds.size.y);
             IList<Vector2> points = m_sequenceSelector.GenerateRandomSpawnPoints(boxRext, 2);
             foreach (Vector2 point in points)
+            {
                 m_pendingSymbolPositions.Enqueue(point);
+            }
         }
 
         /// <summary>
@@ -107,6 +112,7 @@ namespace LobbyRelaySample.ngo
         [ServerRpc(RequireOwnership = false)]
         private void VerifyConnection_ServerRpc(ulong clientId)
         {
+            Debug.Log("VerifyConnection_ServerRpc(" + clientId + ")");
             VerifyConnection_ClientRpc(clientId);
 
             // While we could start pooling symbol objects now, incoming clients would be flooded with the Spawn calls.
@@ -117,8 +123,12 @@ namespace LobbyRelaySample.ngo
         [ClientRpc]
         private void VerifyConnection_ClientRpc(ulong clientId)
         {
+            Debug.Log("VerifyConnection_ClientRpc(" + clientId + ")");
             if (clientId == m_localUserData.id)
+            {
+                Debug.Log("calling VerifyConnectionConfirm_ServerRpc(" + m_localUserData.ToString() + ")");
                 VerifyConnectionConfirm_ServerRpc(m_localUserData);
+            }
         }
 
         /// <summary>
@@ -127,6 +137,7 @@ namespace LobbyRelaySample.ngo
         [ServerRpc(RequireOwnership = false)]
         private void VerifyConnectionConfirm_ServerRpc(PlayerData clientData)
         {
+            Debug.Log("VerifyConnectionConfirm_ServerRpc(" + clientData.ToString() + ")");
             // Note that the client will not receive the cursor object reference, so the cursor must handle initializing itself.
             PlayerCursor playerCursor = Instantiate(m_playerCursorPrefab);
             playerCursor.NetworkObject.SpawnWithOwnership(clientData.id);
@@ -134,12 +145,14 @@ namespace LobbyRelaySample.ngo
             m_dataStore.AddPlayer(clientData.id, clientData.name);
             // The game will begin at this point, or else there's a timeout for booting any unconnected players.
             bool areAllPlayersConnected = NetworkManager.Singleton.ConnectedClients.Count >= m_expectedPlayerCount;
+            Debug.Log("Calling VerifyConnectionConfirm_ClientRpc(" + clientData.id + ", " + areAllPlayersConnected + ")");
             VerifyConnectionConfirm_ClientRpc(clientData.id, areAllPlayersConnected);
         }
 
         [ClientRpc]
         private void VerifyConnectionConfirm_ClientRpc(ulong clientId, bool canBeginGame)
         {
+            Debug.Log("VerifyConnectionConfirm_ClientRpc(" + clientId + ", " + canBeginGame + ")");
             if (clientId == m_localUserData.id)
             {
                 m_onConnectionVerified?.Invoke();

@@ -16,7 +16,7 @@ namespace LobbyRelaySample
     /// </summary>
     public class LogHandler : ILogHandler
     {
-        public LogMode mode = LogMode.Critical;
+        public LogMode mode = LogMode.Verbose; //LogMode.Critical;
 
         static LogHandler s_instance;
         ILogHandler m_DefaultLogHandler = Debug.unityLogger.logHandler; // Store the default logger that prints to console.

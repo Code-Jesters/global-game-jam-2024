@@ -215,14 +215,16 @@ namespace LobbyRelaySample
             SendLocalLobbyData();
         }
 
-        //Only Host needs to listen to this and change state.
+        // Only Host needs to listen to this and change state.
         void OnPlayersReady(int readyCount)
         {
+            // DJMC: This makes it so that if more than one player is connected and all are ready,
+            // then we automatically proceed to countdown
             if (readyCount == m_LocalLobby.PlayerCount &&
                 m_LocalLobby.LocalLobbyState.Value != LobbyState.CountDown)
             {
-                m_LocalLobby.LocalLobbyState.Value = LobbyState.CountDown;
-                SendLocalLobbyData();
+                // DJMC skip auto-countdown progression (making this more explicitly manual)
+                //StartGameCountdown();
             }
             else if (m_LocalLobby.LocalLobbyState.Value == LobbyState.CountDown)
             {
@@ -231,12 +233,23 @@ namespace LobbyRelaySample
             }
         }
 
+        public void StartGameCountdown()
+        {
+            Debug.Log("Starting game countdown...");
+            m_LocalLobby.LocalLobbyState.Value = LobbyState.CountDown;
+            SendLocalLobbyData();
+        }
+
         void OnLobbyStateChanged(LobbyState state)
         {
             if (state == LobbyState.Lobby)
+            {
                 CancelCountDown();
+            }
             if (state == LobbyState.CountDown)
+            {
                 BeginCountDown();
+            }
         }
 
         void BeginCountDown()
@@ -253,6 +266,7 @@ namespace LobbyRelaySample
 
         public void FinishedCountDown()
         {
+            Debug.Log("FinishedCountDown()");
             m_LocalUser.UserStatus.Value = PlayerStatus.InGame;
             m_LocalLobby.LocalLobbyState.Value = LobbyState.InGame;
             m_setupInGame.StartNetworkedGame(m_LocalLobby, m_LocalUser);

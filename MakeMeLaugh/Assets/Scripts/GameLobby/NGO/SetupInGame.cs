@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Networking.Transport;
+using Unity.Networking.Transport.Relay;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
@@ -41,29 +42,37 @@ namespace LobbyRelaySample.ngo
         /// </summary>
         async Task CreateNetworkManager(LocalLobby localLobby, LocalPlayer localPlayer)
         {
+            Debug.Log("CreateNetworkManager(" + localLobby + ", " + localPlayer + ")");
             m_lobby = localLobby;
             m_inGameRunner = Instantiate(m_IngameRunnerPrefab).GetComponentInChildren<InGameRunner>();
             m_inGameRunner.Initialize(OnConnectionVerified, m_lobby.PlayerCount, OnGameBegin, OnGameEnd,
                 localPlayer);
             if (localPlayer.IsHost.Value)
             {
+                Debug.Log("  decided we are the host; awaiting SetRelayHostData()...");
                 await SetRelayHostData();
                 Debug.Log("NetworkManager.Singleton.StartHost()");
                 NetworkManager.Singleton.StartHost();
             }
             else
             {
+                Debug.Log("CreateNetworkManager() decided we are NOT the host; awaiting AwaitRelayCode(" + localLobby + ")...");
                 await AwaitRelayCode(localLobby);
+                Debug.Log("CreateNetworkManager() awaiting SetRelayClientData()...");
                 await SetRelayClientData();
-                Debug.Log("NetworkManager.Singleton.StartClient()");
+                Debug.Log("CreateNetworkManager() calling NetworkManager.Singleton.StartClient()");
                 NetworkManager.Singleton.StartClient();
             }
         }
 
         async Task AwaitRelayCode(LocalLobby lobby)
         {
+            Debug.Log("AwaitRelayCode(" + lobby + ")");
             string relayCode = lobby.RelayCode.Value;
-            lobby.RelayCode.onChanged += (code) => relayCode = code;
+            lobby.RelayCode.onChanged += (code) => {
+                Debug.Log("lobby.RelayCode.onChanged(" + code + ")");
+                relayCode = code;
+            };
             while (string.IsNullOrEmpty(relayCode))
             {
                 await Task.Delay(100);
@@ -75,7 +84,9 @@ namespace LobbyRelaySample.ngo
             UnityTransport transport = NetworkManager.Singleton.GetComponentInChildren<UnityTransport>();
 
             var allocation = await Relay.Instance.CreateAllocationAsync(m_lobby.MaxPlayerCount.Value);
+
             var joincode = await Relay.Instance.GetJoinCodeAsync(allocation.AllocationId);
+            Debug.Log("DJMC fyi the joincode is " + joincode);
             GameManager.Instance.HostSetRelayCode(joincode);
 
             bool isSecure = false;
@@ -84,6 +95,9 @@ namespace LobbyRelaySample.ngo
 
             transport.SetHostRelayData(AddressFromEndpoint(endpoint), endpoint.Port,
                 allocation.AllocationIdBytes, allocation.Key, allocation.ConnectionData, isSecure);
+
+            // DJMC -- added to better support websockets as per https://docs.unity.com/ugs/manual/relay/manual/relay-and-ngo
+            transport.SetRelayServerData(new RelayServerData(allocation, "wss"));
         }
 
         async Task SetRelayClientData()
@@ -98,13 +112,16 @@ namespace LobbyRelaySample.ngo
             transport.SetClientRelayData(AddressFromEndpoint(endpoint), endpoint.Port,
                 joinAllocation.AllocationIdBytes, joinAllocation.Key,
                 joinAllocation.ConnectionData, joinAllocation.HostConnectionData, isSecure);
+
+            // DJMC -- added to better support websockets as per https://docs.unity.com/ugs/manual/relay/manual/relay-and-ngo
+            transport.SetRelayServerData(new RelayServerData(joinAllocation, "wss"));
         }
 
         /// <summary>
         /// Determine the server endpoint for connecting to the Relay server, for either an Allocation or a JoinAllocation.
         /// If DTLS encryption is available, and there's a secure server endpoint available, use that as a secure connection. Otherwise, just connect to the Relay IP unsecured.
         /// </summary>
-        NetworkEndPoint GetEndpointForAllocation(
+        NetworkEndpoint GetEndpointForAllocation(
             List<RelayServerEndpoint> endpoints,
             string ip,
             int port,
@@ -116,15 +133,15 @@ namespace LobbyRelaySample.ngo
                 if (endpoint.Secure && endpoint.Network == RelayServerEndpoint.NetworkOptions.Udp)
                 {
                     isSecure = true;
-                    return NetworkEndPoint.Parse(endpoint.Host, (ushort)endpoint.Port);
+                    return NetworkEndpoint.Parse(endpoint.Host, (ushort)endpoint.Port);
                 }
             }
 #endif
             isSecure = false;
-            return NetworkEndPoint.Parse(ip, (ushort)port);
+            return NetworkEndpoint.Parse(ip, (ushort)port);
         }
 
-        string AddressFromEndpoint(NetworkEndPoint endpoint)
+        string AddressFromEndpoint(NetworkEndpoint endpoint)
         {
             return endpoint.Address.Split(':')[0];
         }
@@ -136,6 +153,7 @@ namespace LobbyRelaySample.ngo
 
         public void StartNetworkedGame(LocalLobby localLobby, LocalPlayer localPlayer)
         {
+            Debug.Log("StartNetworkedGame(" + localLobby + ", " + localPlayer + ")");
             m_doesNeedCleanup = true;
             SetMenuVisibility(false);
 #pragma warning disable 4014

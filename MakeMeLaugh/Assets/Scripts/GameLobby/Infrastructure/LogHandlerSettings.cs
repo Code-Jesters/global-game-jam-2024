@@ -9,7 +9,7 @@ namespace LobbyRelaySample
     {
         [SerializeField]
         [Tooltip("Only logs of this level or higher will appear in the console.")]
-        private LogMode m_editorLogVerbosity = LogMode.Critical;
+        private LogMode m_editorLogVerbosity = LogMode.Verbose; //LogMode.Critical;
 
         [SerializeField]
         private PopUpUI m_popUp;
@@ -19,7 +19,10 @@ namespace LobbyRelaySample
         {
             get
             {
-                if (s_LogHandlerSettings != null) return s_LogHandlerSettings;
+                if (s_LogHandlerSettings != null)
+                {
+                    return s_LogHandlerSettings;
+                }
                 return s_LogHandlerSettings = FindObjectOfType<LogHandlerSettings>();
             }
         }
