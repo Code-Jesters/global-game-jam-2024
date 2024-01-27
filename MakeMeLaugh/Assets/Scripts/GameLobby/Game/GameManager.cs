@@ -295,6 +295,8 @@ namespace LobbyRelaySample
             m_LocalLobby = new LocalLobby { LocalLobbyState = { Value = LobbyState.Lobby } };
             LobbyManager = new LobbyManager();
 
+            // Note: cannot skip lobby services -- they don't seem to finish, but starting them is necessary...
+
             await InitializeServices();
             Debug.Log("DJMC: InitializeServices() all done!");
             AuthenticatePlayer();
