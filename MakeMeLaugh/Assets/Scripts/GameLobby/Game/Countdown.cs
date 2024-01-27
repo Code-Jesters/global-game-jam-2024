@@ -18,7 +18,9 @@ namespace LobbyRelaySample
         public void OnEnable()
         {
             if (m_ui == null)
+            {
                 m_ui = GetComponent<UI.CountdownUI>();
+            }
             TimeLeft.onChanged += m_ui.OnTimeChanged;
             TimeLeft.Value = -1;
         }
@@ -36,10 +38,14 @@ namespace LobbyRelaySample
         public void Update()
         {
             if (TimeLeft.Value < 0)
+            {
                 return;
+            }
             TimeLeft.Value -= Time.deltaTime;
             if (TimeLeft.Value < 0)
+            {
                 GameManager.Instance.FinishedCountDown();
+            }
         }
     }
 }

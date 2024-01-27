@@ -93,7 +93,8 @@ namespace LobbyRelaySample.lobby
                     : EmoteType.None;
                 var userStatus = player.Data?.ContainsKey(key_Userstatus) == true
                     ? (PlayerStatus)int.Parse(player.Data[key_Userstatus].Value)
-                    : PlayerStatus.Lobby;
+                    //: PlayerStatus.Lobby;
+                    : PlayerStatus.LobbyReady;
 
                 LocalPlayer localPlayer = localLobby.GetLocalPlayer(index);
 

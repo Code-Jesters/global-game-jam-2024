@@ -435,7 +435,7 @@ namespace LobbyRelaySample
         {
             Debug.Log($"Setting Lobby user state {GameState.Lobby}");
             SetGameState(GameState.Lobby);
-            SetLocalUserStatus(PlayerStatus.Lobby);
+            SetLocalUserStatus(PlayerStatus.LobbyReady);
         }
 
         void ResetLocalLobby()

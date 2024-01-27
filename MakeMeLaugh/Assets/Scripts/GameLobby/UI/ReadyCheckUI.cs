@@ -9,11 +9,11 @@ namespace LobbyRelaySample.UI
     {
         public void OnReadyButton()
         {
-            ChangeState(PlayerStatus.Ready);
+            //ChangeState(PlayerStatus.Ready);
         }
         public void OnCancelButton()
         {
-            ChangeState(PlayerStatus.Lobby);
+            //ChangeState(PlayerStatus.Lobby);
         }
         void ChangeState(PlayerStatus status)
         {

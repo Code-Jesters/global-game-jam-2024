@@ -126,8 +126,10 @@ namespace LobbyRelaySample
             int readyCount = 0;
             foreach (var player in m_LocalPlayers)
             {
-                if (player.UserStatus.Value == PlayerStatus.Ready)
+                if (player.UserStatus.Value == PlayerStatus.LobbyReady)
+                {
                     readyCount++;
+                }
             }
 
             onUserReadyChange?.Invoke(readyCount);
