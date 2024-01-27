@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
+using System;
 
 using UnityEngine; // for Debug.Log()
 
@@ -55,7 +56,14 @@ namespace Unity.Services.Samples
 
                 //If you are using multiple unity services, make sure to initialize it only once before using your services.
                 Debug.Log("TryInitServicesAsync() calling UnityServices.InitializeAsync() w/ auth profile");
-                await UnityServices.InitializeAsync(authProfile);
+                try
+                {
+                    await UnityServices.InitializeAsync(authProfile);
+                }
+                catch (Exception exception)
+                {
+                    Debug.Log("UnityServices.InitializeAsync() w/ auth profile failed w/ exception " + exception.ToString());
+                }
                 Debug.Log("UnityServices.InitializeAsync() w/ auth profile has finished");
             }
             else
@@ -83,6 +91,7 @@ namespace Unity.Services.Samples
             Debug.Log("TrySignInAsync() start");
             if (!await TryInitServicesAsync(profileName))
             {
+                Debug.Log("TrySignInAsync() return false (1)");
                 return false;
             }
             if (s_IsSigningIn)
@@ -90,15 +99,20 @@ namespace Unity.Services.Samples
                 var task = WaitForSignedIn();
                 if (await Task.WhenAny(task, Task.Delay(k_InitTimeout)) != task)
                 {
+                    Debug.Log("TrySignInAsync() return false (2)");
                     return false; // We timed out
                 }
+                Debug.Log("TrySignInAsync() returning " + AuthenticationService.Instance.IsSignedIn);
                 return AuthenticationService.Instance.IsSignedIn;
             }
 
             s_IsSigningIn = true;
+            Debug.Log("TrySignInAsync() awaiting AuthenticationService.Instance.SignInAnonymouslyAsync()");
             await AuthenticationService.Instance.SignInAnonymouslyAsync();
+            Debug.Log("TrySignInAsync() finished awaiting AuthenticationService.Instance.SignInAnonymouslyAsync()");
             s_IsSigningIn = false;
 
+            Debug.Log("TrySignInAsync() returning " + AuthenticationService.Instance.IsSignedIn);
             return AuthenticationService.Instance.IsSignedIn;
 
             async Task WaitForSignedIn()
