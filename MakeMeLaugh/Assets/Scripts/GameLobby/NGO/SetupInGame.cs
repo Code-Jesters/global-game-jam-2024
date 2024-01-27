@@ -42,29 +42,37 @@ namespace LobbyRelaySample.ngo
         /// </summary>
         async Task CreateNetworkManager(LocalLobby localLobby, LocalPlayer localPlayer)
         {
+            Debug.Log("CreateNetworkManager(" + localLobby + ", " + localPlayer + ")");
             m_lobby = localLobby;
             m_inGameRunner = Instantiate(m_IngameRunnerPrefab).GetComponentInChildren<InGameRunner>();
             m_inGameRunner.Initialize(OnConnectionVerified, m_lobby.PlayerCount, OnGameBegin, OnGameEnd,
                 localPlayer);
             if (localPlayer.IsHost.Value)
             {
+                Debug.Log("  decided we are the host; awaiting SetRelayHostData()...");
                 await SetRelayHostData();
                 Debug.Log("NetworkManager.Singleton.StartHost()");
                 NetworkManager.Singleton.StartHost();
             }
             else
             {
+                Debug.Log("CreateNetworkManager() decided we are NOT the host; awaiting AwaitRelayCode(" + localLobby + ")...");
                 await AwaitRelayCode(localLobby);
+                Debug.Log("CreateNetworkManager() awaiting SetRelayClientData()...");
                 await SetRelayClientData();
-                Debug.Log("NetworkManager.Singleton.StartClient()");
+                Debug.Log("CreateNetworkManager() calling NetworkManager.Singleton.StartClient()");
                 NetworkManager.Singleton.StartClient();
             }
         }
 
         async Task AwaitRelayCode(LocalLobby lobby)
         {
+            Debug.Log("AwaitRelayCode(" + lobby + ")");
             string relayCode = lobby.RelayCode.Value;
-            lobby.RelayCode.onChanged += (code) => relayCode = code;
+            lobby.RelayCode.onChanged += (code) => {
+                Debug.Log("lobby.RelayCode.onChanged(" + code + ")");
+                relayCode = code;
+            };
             while (string.IsNullOrEmpty(relayCode))
             {
                 await Task.Delay(100);
@@ -78,6 +86,7 @@ namespace LobbyRelaySample.ngo
             var allocation = await Relay.Instance.CreateAllocationAsync(m_lobby.MaxPlayerCount.Value);
 
             var joincode = await Relay.Instance.GetJoinCodeAsync(allocation.AllocationId);
+            Debug.Log("DJMC fyi the joincode is " + joincode);
             GameManager.Instance.HostSetRelayCode(joincode);
 
             bool isSecure = false;
@@ -144,6 +153,7 @@ namespace LobbyRelaySample.ngo
 
         public void StartNetworkedGame(LocalLobby localLobby, LocalPlayer localPlayer)
         {
+            Debug.Log("StartNetworkedGame(" + localLobby + ", " + localPlayer + ")");
             m_doesNeedCleanup = true;
             SetMenuVisibility(false);
 #pragma warning disable 4014

@@ -266,6 +266,7 @@ namespace LobbyRelaySample
 
         public void FinishedCountDown()
         {
+            Debug.Log("FinishedCountDown()");
             m_LocalUser.UserStatus.Value = PlayerStatus.InGame;
             m_LocalLobby.LocalLobbyState.Value = LobbyState.InGame;
             m_setupInGame.StartNetworkedGame(m_LocalLobby, m_LocalUser);
