@@ -482,5 +482,16 @@ namespace LobbyRelaySample
         }
 
         #endregion
+
+        bool started = false;
+        void Update()
+        {
+            // DJMC: Force start process at beginning.
+            if (!started)
+            {
+                started = true;
+                UIChangeMenuState(GameState.JoinMenu);
+            }
+        }
     }
 }

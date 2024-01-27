@@ -30,7 +30,9 @@ namespace LobbyRelaySample.ngo
         private void SetMenuVisibility(bool areVisible)
         {
             foreach (GameObject go in m_disableWhileInGame)
+            {
                 go.SetActive(areVisible);
+            }
         }
 
         /// <summary>
