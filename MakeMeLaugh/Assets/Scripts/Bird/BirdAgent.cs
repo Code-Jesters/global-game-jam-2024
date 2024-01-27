@@ -34,6 +34,8 @@ public class BirdAgent : MonoBehaviour
         
     }
 
+    // TODO: Prevent bird from flying to close and gimbal locking/spinning.
+    // (Switch to circle or attack mode if close enough.)
     public void FlyTowardsPlayer()
     {
         transform.LookAt(target);
