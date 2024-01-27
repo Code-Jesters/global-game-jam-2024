@@ -148,7 +148,7 @@ Transform:
   m_GameObject: {fileID: 146717420}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -4, y: 2, z: 5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -292,6 +292,11 @@ Transform:
   - {fileID: 1413785382}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &987218382 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7334755322489845444, guid: 96c8cec7a4b7a4a47982ff759af8cc33, type: 3}
+  m_PrefabInstance: {fileID: 3944152426471459447}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1156979342
 GameObject:
   m_ObjectHideFlags: 0
@@ -438,7 +443,7 @@ Transform:
   m_GameObject: {fileID: 1176297474}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -4, y: 2, z: 5}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -921,6 +926,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1971613110}
+  - component: {fileID: 1971613111}
   m_Layer: 0
   m_Name: Birds
   m_TagString: Untagged
@@ -944,6 +950,18 @@ Transform:
   - {fileID: 3944152426471459448}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1971613111
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1971613109}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41c933fbe6fd7804c9b84628d5726d03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2059494090
 GameObject:
   m_ObjectHideFlags: 0
@@ -999,7 +1017,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1300711278008774144, guid: 96c8cec7a4b7a4a47982ff759af8cc33, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -5.58
+      value: -20
       objectReference: {fileID: 0}
     - target: {fileID: 1300711278008774144, guid: 96c8cec7a4b7a4a47982ff759af8cc33, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1044,13 +1062,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7334755322489845444, guid: 96c8cec7a4b7a4a47982ff759af8cc33, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3944152426471459449}
   m_SourcePrefab: {fileID: 100100000, guid: 96c8cec7a4b7a4a47982ff759af8cc33, type: 3}
 --- !u!4 &3944152426471459448 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1300711278008774144, guid: 96c8cec7a4b7a4a47982ff759af8cc33, type: 3}
   m_PrefabInstance: {fileID: 3944152426471459447}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &3944152426471459449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 987218382}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79e9ac6a2b27f7d4c9da1cddfa714e66, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  movementSpeed: 2
+  target: {fileID: 146717421}
+  moveState: 0
 --- !u!1001 &6940966800028321436
 PrefabInstance:
   m_ObjectHideFlags: 0
