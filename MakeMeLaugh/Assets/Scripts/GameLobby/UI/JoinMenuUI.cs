@@ -83,9 +83,9 @@ namespace LobbyRelaySample.UI
             m_LocalLobbySelected = null;
         }
 
-        public void OnRefresh()
+        public async void OnRefresh()
         {
-            Manager.QueryLobbies();
+            await Manager.QueryLobbies();
         }
 
         void OnLobbyListChanged(Dictionary<string, LocalLobby> lobbyList)

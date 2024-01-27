@@ -44,6 +44,7 @@ namespace LobbyRelaySample
 
         public GameState LocalGameState { get; private set; }
         public LobbyManager LobbyManager { get; private set; }
+        public bool isSignedIn = false;
         [SerializeField]
         SetupInGame m_setupInGame;
         [SerializeField]
@@ -124,12 +125,14 @@ namespace LobbyRelaySample
             }
         }
 
-        public async void QueryLobbies()
+        public async Task QueryLobbies()
         {
             LobbyList.QueryState.Value = LobbyQueryState.Fetching;
+            Debug.Log($"Lobby List Query State Value: ({LobbyList.QueryState.Value}) (Should be {LobbyQueryState.Fetching})");
             var qr = await LobbyManager.RetrieveLobbyListAsync(m_lobbyColorFilter);
             if (qr == null)
             {
+                Debug.LogWarning("Could Not find any lobbies, RetrieveLobbyListAsync returned Null.");
                 return;
             }
 
@@ -315,7 +318,7 @@ namespace LobbyRelaySample
 #if UNITY_EDITOR
             serviceProfileName = $"{serviceProfileName}{LocalProfileTool.LocalProfileSuffix}";
 #endif
-            await UnityServiceAuthenticator.TrySignInAsync(serviceProfileName);
+            isSignedIn = await UnityServiceAuthenticator.TrySignInAsync(serviceProfileName);
         }
 
         void AuthenticatePlayer()
@@ -491,8 +494,10 @@ namespace LobbyRelaySample
         void Update()
         {
             // DJMC: Force start process at beginning.
-            if (!started)
+            if (!started && isSignedIn)
             {
+                Debug.Log($"Signed on, changing to JoinMenu. isSignedIn: {isSignedIn}");
+                // Change to join menu only after async auth has finished
                 started = true;
                 UIChangeMenuState(GameState.JoinMenu);
             }

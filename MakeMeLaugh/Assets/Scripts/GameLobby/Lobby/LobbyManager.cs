@@ -68,17 +68,17 @@ namespace LobbyRelaySample
         }
 
         // Rate Limits are posted here: https://docs.unity.com/lobby/rate-limits.html
-
-        ServiceRateLimiter m_QueryCooldown = new ServiceRateLimiter(1, 1f);
-        ServiceRateLimiter m_CreateCooldown = new ServiceRateLimiter(2, 6f);
-        ServiceRateLimiter m_JoinCooldown = new ServiceRateLimiter(2, 6f);
-        ServiceRateLimiter m_QuickJoinCooldown = new ServiceRateLimiter(1, 10f);
-        ServiceRateLimiter m_GetLobbyCooldown = new ServiceRateLimiter(1, 1f);
-        ServiceRateLimiter m_DeleteLobbyCooldown = new ServiceRateLimiter(2, 1f);
-        ServiceRateLimiter m_UpdateLobbyCooldown = new ServiceRateLimiter(5, 5f);
-        ServiceRateLimiter m_UpdatePlayerCooldown = new ServiceRateLimiter(5, 5f);
-        ServiceRateLimiter m_LeaveLobbyOrRemovePlayer = new ServiceRateLimiter(5, 1);
-        ServiceRateLimiter m_HeartBeatCooldown = new ServiceRateLimiter(5, 30);
+        // Dividing all rate limits by half. RateLimiter values are # of requests per second (as float)
+        ServiceRateLimiter m_QueryCooldown = new ServiceRateLimiter(1, 2f); // orig: 1/1
+        ServiceRateLimiter m_CreateCooldown = new ServiceRateLimiter(2, 12f); // orig: 2/6
+        ServiceRateLimiter m_JoinCooldown = new ServiceRateLimiter(2, 12f); // orig: 2/6
+        ServiceRateLimiter m_QuickJoinCooldown = new ServiceRateLimiter(1, 20f); // orig: 1/10
+        ServiceRateLimiter m_GetLobbyCooldown = new ServiceRateLimiter(1, 2f); // orig: 1/1
+        ServiceRateLimiter m_DeleteLobbyCooldown = new ServiceRateLimiter(2, 2f); // orig: 2/1
+        ServiceRateLimiter m_UpdateLobbyCooldown = new ServiceRateLimiter(5, 10f); // orig: 5/5
+        ServiceRateLimiter m_UpdatePlayerCooldown = new ServiceRateLimiter(5, 10f); // orig: 5/5
+        ServiceRateLimiter m_LeaveLobbyOrRemovePlayer = new ServiceRateLimiter(5, 2f); // orig: 5/1
+        ServiceRateLimiter m_HeartBeatCooldown = new ServiceRateLimiter(5, 60f); // orig: 5/30
 
         #endregion
 
@@ -172,9 +172,13 @@ namespace LobbyRelaySample
         public async Task<QueryResponse> RetrieveLobbyListAsync(LobbyColor limitToColor = LobbyColor.None)
         {
             var filters = LobbyColorToFilters(limitToColor);
+            Debug.Log($"RetrieveLobbyListAsync using these filters: {filters}");
 
             if (m_QueryCooldown.TaskQueued)
+            {
+                Debug.Log($"Retrieve Lobby List Async Queued: {m_QueryCooldown.TaskQueued}");
                 return null;
+            }
             await m_QueryCooldown.QueueUntilCooldown();
 
             QueryLobbiesOptions queryOptions = new QueryLobbiesOptions

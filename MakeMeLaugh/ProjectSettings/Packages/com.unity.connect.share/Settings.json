@@ -4,7 +4,7 @@
             {
                 "type": "System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
                 "key": "buildOutputDirList",
-                "value": "{\"m_Value\":\"C:/dev/global-game-jam-2024/Build/20240126/TheGame;C:/dev/global-game-jam-2024/Build/20240125/TheGame;C:/dev/global-game-jam-2024/MakeMeLaugh/WebGL Builds;C:/dev/ggj2024-experiments/Build/20240122/TheGame;;;;;;\"}"
+                "value": "{\"m_Value\":\"C:/Users/zpall/OneDrive/Desktop/Games/Gamedev/Games/global-game-jam-2024/MakeMeLaugh/WebGL Builds/itch-test;C:/dev/global-game-jam-2024/Build/20240126/TheGame;C:/dev/global-game-jam-2024/Build/20240125/TheGame;C:/dev/global-game-jam-2024/MakeMeLaugh/WebGL Builds;C:/dev/ggj2024-experiments/Build/20240122/TheGame;;;;;\"}"
             },
             {
                 "type": "System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
