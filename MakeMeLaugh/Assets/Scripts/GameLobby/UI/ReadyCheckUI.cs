@@ -10,6 +10,10 @@ namespace LobbyRelaySample.UI
         public void OnReadyButton()
         {
             //ChangeState(PlayerStatus.Ready);
+
+            // DJMC: note this breaks when run by non-host
+            // simple fix -- hide button for non-host!
+            Manager.StartGameCountdown();
         }
         public void OnCancelButton()
         {
