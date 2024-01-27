@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
+//using Unity.Services.Core.Environments;
 using System;
 
 using UnityEngine; // for Debug.Log()
@@ -52,7 +53,16 @@ namespace Unity.Services.Samples
                 //ProfileNames can't contain non-alphanumeric characters
                 Regex rgx = new Regex("[^a-zA-Z0-9 - _]");
                 profileName = rgx.Replace(profileName, "");
-                var authProfile = new InitializationOptions().SetProfile(profileName);
+                var authProfile = new InitializationOptions()
+                    .SetProfile(profileName)
+                    // Does not compile for me (but I guess "production" is default anyhow?)
+                    // .SetEnvironmentName("production")
+                    ;
+
+                //
+                        //var options = new InitializationOptions().SetEnvironmentName("production");
+
+                //
 
                 //If you are using multiple unity services, make sure to initialize it only once before using your services.
                 Debug.Log("TryInitServicesAsync() calling UnityServices.InitializeAsync() w/ auth profile");

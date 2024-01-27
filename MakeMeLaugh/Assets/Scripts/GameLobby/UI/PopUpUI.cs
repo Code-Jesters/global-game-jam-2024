@@ -27,7 +27,8 @@ namespace LobbyRelaySample
         public void ShowPopup(string newText)
         {
             if (!gameObject.activeSelf)
-            {   m_currentText.Clear();
+            {
+                m_currentText.Clear();
                 gameObject.SetActive(true);
             }
             m_currentText.AppendLine(newText);

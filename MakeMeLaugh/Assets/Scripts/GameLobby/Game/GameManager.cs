@@ -234,9 +234,13 @@ namespace LobbyRelaySample
         void OnLobbyStateChanged(LobbyState state)
         {
             if (state == LobbyState.Lobby)
+            {
                 CancelCountDown();
+            }
             if (state == LobbyState.CountDown)
+            {
                 BeginCountDown();
+            }
         }
 
         void BeginCountDown()
