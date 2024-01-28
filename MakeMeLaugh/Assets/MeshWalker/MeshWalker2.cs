@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,12 +8,12 @@ public class TriangleData
     public int i1, i2, i3;
     public Vector3 normal;
     public List<Vector3> intersectionPoints = new();
+    public int forwardIntersectionIndex = -1;
 }
 
 public class MeshWalker2 : MonoBehaviour
 {
     public LineRenderer playerTriangleLines;
-    public LineRenderer playerTriangleNeighborLines;
     public Transform pathPointRoot;
     public Transform debugFrontSphere;
     public Transform debugBackSphere;
@@ -33,13 +32,12 @@ public class MeshWalker2 : MonoBehaviour
 
     Transform meshTransform;
     Mesh mesh;
-    int[] triangles;
-    Vector3[] vertices;
-    List<IntersectionData> planeIntersections = new();
 
     MeshMate meshMate;
-    HashSet<Vector3> currentPathPoints = new(new Vector3EqualityComparer(0.1f));
     List<Transform> debugPathPoints = new();
+    List<TriangleData> triangleDatas = new();
+
+    float sanitizeTolerance = 0.001f;
 
     //---------------------------------------------------------------------------
     void Start()
@@ -59,11 +57,6 @@ public class MeshWalker2 : MonoBehaviour
             mesh = meshCollider.sharedMesh;
             meshTransform = meshCollider.transform;
             meshMate = new MeshMate(mesh);
-            triangles = mesh.triangles;
-            vertices = mesh.vertices;
-
-            List<int> localTriangles = meshMate.GetAdjacentFaces(faceID);
-            localTriangles.Add(faceID);
 
             for (int index = 0; index < 32; index++)
             {
@@ -72,9 +65,9 @@ public class MeshWalker2 : MonoBehaviour
                 debugPathPoints.Add(obj);
             }
 
-            List<TriangleData> triangleDatas = new();
+            List<int> localTriangles = meshMate.GetAdjacentFaces(faceID);
+            localTriangles.Add(faceID);
 
-            int debugPointIdx = 0;
             foreach (int triangle in localTriangles)
             {
                 SimplePlane plane = new();
@@ -84,35 +77,10 @@ public class MeshWalker2 : MonoBehaviour
                 if (tData.intersectionPoints.Count == 2) triangleDatas.Add(tData);
             }
 
-            for (int i = triangleDatas.Count - 1; i >= 0; i--)
-            {
-               for (int j = i - 1; j >= 0; j--)
-               {
-                   TriangleData tData1 = triangleDatas[i];
-                   TriangleData tData2 = triangleDatas[j];
-                   if (tData1.intersectionPoints.Count != 2 || tData2.intersectionPoints.Count != 2)
-                       continue;
+            SanitizeTriangleData(triangleDatas);
+            UpdateTriangleForward();
 
-                   float diff = Vector3.SqrMagnitude(tData1.intersectionPoints[0] - tData2.intersectionPoints[0]);
-                   diff += Vector3.SqrMagnitude(tData1.intersectionPoints[1] - tData2.intersectionPoints[1]);
-
-                   if (diff < 0.05f)
-                   {
-                       triangleDatas.RemoveAt(i);
-                       continue;
-                   }
-
-                   diff = Vector3.SqrMagnitude(tData1.intersectionPoints[0] - tData2.intersectionPoints[1]);
-                   diff += Vector3.SqrMagnitude(tData1.intersectionPoints[1] - tData2.intersectionPoints[0]);
-
-                   if (diff < 0.05f)
-                   {
-                       triangleDatas.RemoveAt(i);
-                       continue;
-                   }
-               }
-            }
-
+            int debugPointIdx = 0;
             foreach (TriangleData data in triangleDatas)
             {
                 Debug.Log("Triangle " + data.faceID + " has " + data.intersectionPoints.Count + " path points");
@@ -125,84 +93,45 @@ public class MeshWalker2 : MonoBehaviour
                 }
             }
         }
-    }
-
-    //---------------------------------------------------------------------------
-    void UpdatePathPoints()
-    {
-        List<int> localTriangles = meshMate.GetAdjacentFaces(faceID);
-        localTriangles.Add(faceID);
-        // Debug.Log(string.Join(", ", neighborTriangles));
-
-        SimplePlane plane = new();
-        plane.normal = transform.right;
-        plane.validPoint = transform.position;
-        planeIntersections.Clear();
-        currentPathPoints.Clear();
-
-        foreach (int neighborTriangle in localTriangles)
-        {
-            meshMate.GetIntersections(plane, neighborTriangle, meshTransform, planeIntersections);
-            if (planeIntersections.Count > 0)
-            {
-                // Debug.Log("intersecting " + neighborTriangle);
-                currentPathPoints.Add(planeIntersections[0].point);
-                currentPathPoints.Add(planeIntersections[1].point);
-            }
-
-            planeIntersections.Clear();
-        }
-
-        int index = 0;
-        foreach (Vector3 point in currentPathPoints)
-        {
-            debugPathPoints[index].gameObject.SetActive(true);
-            debugPathPoints[index].position = point;
-            index++;
-        }
-
-        for (int i = currentPathPoints.Count; i < debugPathPoints.Count; i++)
-        {
-            debugPathPoints[i].gameObject.SetActive(false);
-        }
-    }
-
-    //---------------------------------------------------------------------------
-    void UpdateCurrentTriangle(int faceID, Vector3 currentPos)
-    {
-        this.faceID = faceID;
-
-        Debug.Log("Entered face " + faceID);
-
-        SimplePlane plane = new();
-        plane.normal = transform.right;
-        plane.validPoint = currentPos;
-        planeIntersections.Clear();
-        meshMate.GetIntersections(plane, faceID, meshTransform, planeIntersections);
-
-        if (planeIntersections.Count == 2)
-        {
-            float dist1 = Vector3.Dot(planeIntersections[0].point - currentPos, transform.forward);
-            float dist2 = Vector3.Dot(planeIntersections[1].point - currentPos, transform.forward);
-
-            int frontIndex = dist1 > dist2 ? 0 : 1;
-            int backIndex = 1 - frontIndex;
-            worldFrontTarget = planeIntersections[frontIndex].point;
-            debugFrontSphere.position = planeIntersections[frontIndex].point;
-            worldBackTarget = planeIntersections[backIndex].point;
-            debugBackSphere.position = planeIntersections[backIndex].point;
-            frontEdgeIndexPair.index1 = planeIntersections[frontIndex].EdgeIndexPair.index1;
-            frontEdgeIndexPair.index2 = planeIntersections[frontIndex].EdgeIndexPair.index2;
-            backEdgeIndexPair.index1 = planeIntersections[backIndex].EdgeIndexPair.index1;
-            backEdgeIndexPair.index2 = planeIntersections[backIndex].EdgeIndexPair.index2;
-        }
-
-        // baryFrontTarget = WorldToBary(worldFrontTarget, v1, v2, v3);
-        // baryBackTarget = WorldToBary(worldBackTarget, v1, v2, v3);
 
         meshMate.GetTriangleWorldPositions(faceID, meshTransform, out Vector3 v1, out Vector3 v2, out Vector3 v3);
         OutlineTriangle(v1, v2, v3);
+    }
 
+    //---------------------------------------------------------------------------
+    TriangleData GetCurrentTriangleData(int faceID)
+    {
+        foreach (TriangleData data in triangleDatas)
+        {
+            if (data.faceID == faceID)
+                return data;
+        }
+
+        return null;
+    }
+
+    //---------------------------------------------------------------------------
+    void UpdateTriangleForward()
+    {
+       TriangleData data = GetCurrentTriangleData(faceID);
+       float dist1 = Vector3.Dot(data.intersectionPoints[0] - transform.position, transform.forward);
+       float dist2 = Vector3.Dot(data.intersectionPoints[1] - transform.position, transform.forward);
+       data.forwardIntersectionIndex = dist1 > dist2 ? 0 : 1;
+    }
+
+    //---------------------------------------------------------------------------
+    TriangleData GetNeighborTriangleData(Vector3 startPoint, int excludeFaceID)
+    {
+        const float tolerance = 0.001f;
+        foreach (TriangleData data in triangleDatas)
+        {
+            if (data.faceID == excludeFaceID) continue;
+            if (Vector3.SqrMagnitude(data.intersectionPoints[0] - startPoint) < tolerance ||
+                Vector3.SqrMagnitude(data.intersectionPoints[1] - startPoint) < tolerance)
+                return data;
+        }
+
+        return null;
     }
 
     //---------------------------------------------------------------------------
@@ -210,43 +139,20 @@ public class MeshWalker2 : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            MoveTowardTarget(true, speed * Time.deltaTime, frontEdgeIndexPair);
+            MoveTowardTarget(true, speed * Time.deltaTime);
         }
         else if (Input.GetKey(KeyCode.DownArrow))
         {
-            MoveTowardTarget(false, speed * Time.deltaTime, backEdgeIndexPair);
+            MoveTowardTarget(false, speed * Time.deltaTime);
         }
     }
 
     //---------------------------------------------------------------------------
-    (bool, Vector3) GetClosestTarget(bool targetFront)
+    void MoveTowardTarget(bool targetFront, float moveAmount)
     {
-        float closestDist = float.MaxValue;
-        Vector3 closestTarget = Vector3.zero;
-        Vector3 targetDir = targetFront ? transform.forward : -transform.forward;
-
-        foreach (Vector3 pathPoint in currentPathPoints)
-        {
-            float dist = Vector3.Dot(pathPoint - transform.position, targetDir);
-            if (dist > 0 && dist < closestDist)
-            {
-                closestDist = dist;
-                closestTarget = pathPoint;
-            }
-        }
-        return ((closestDist != float.MaxValue), closestTarget);
-    }
-
-    //---------------------------------------------------------------------------
-    void MoveTowardTarget(bool targetFront, float moveAmount, EdgeIndexPair edgeIndexPair)
-    {
-        (bool result, Vector3 target) = GetClosestTarget(targetFront);
-        if (!result)
-        {
-            UpdatePathPoints();
-            Debug.LogWarning("missing1");
-            return;
-        }
+        TriangleData data = GetCurrentTriangleData(faceID);
+        int targetIndex = targetFront ? data.forwardIntersectionIndex : 1 - data.forwardIntersectionIndex;
+        Vector3 target = data.intersectionPoints[targetIndex];
         Vector3 fromUsToTarget = (target - transform.position);
         float distanceToTarget = fromUsToTarget.magnitude;
 
@@ -255,48 +161,52 @@ public class MeshWalker2 : MonoBehaviour
             transform.position = target;
             moveAmount -= distanceToTarget;
 
-            UpdatePathPoints();
-
-            (bool result2, Vector3 nextTarget) = GetClosestTarget(targetFront);
-            if (!result2)
+            TriangleData neighborData = GetNeighborTriangleData(target, faceID);
+            if (neighborData != null)
             {
-                Debug.LogWarning("wtf");
-                return;
+                faceID = neighborData.faceID;
+                UpdateTriangleForward();
             }
-
-            transform.forward = (nextTarget - transform.position).normalized;
-
-            if (Physics.Raycast(transform.position + transform.up * 0.5f, -transform.up, out RaycastHit hit))
-            {
-                // Vector3 right = transform.right;
-                // transform.up = hit.normal;
-                // transform.forward = Vector3.Cross(transform.right, hit.normal);
-                // transform.right = right;
-                if (hit.triangleIndex != -1)
-                {
-                    UpdateCurrentTriangle(hit.triangleIndex, hit.point);
-                }
-                else
-                {
-                    Debug.Break();
-                }
-            }
-
-            // if (meshMate.GetTriangleEdgeNeighbor(edgeIndexPair, faceID, out int newFaceID))
-            // {
-            //     Vector3 newFaceNormal = meshMate.GetNormalForFace(newFaceID, meshTransform);
-            //     transform.up = newFaceNormal;
-            //     UpdateCurrentTriangle(newFaceID, transform.position);
-            //
-            //     // Recursive until done
-            //     EdgeIndexPair newEdgeIndexPair = targetFront ? frontEdgeIndexPair : backEdgeIndexPair;
-            //     MoveTowardTarget(targetFront, moveAmount, newEdgeIndexPair);
-            // }
         }
         else
         {
             Vector3 forward = fromUsToTarget.normalized;
             transform.position += forward * 1f * Time.deltaTime;
+        }
+    }
+
+    //---------------------------------------------------------------------------
+    void SanitizeTriangleData(List<TriangleData> triangleDatas)
+    {
+        for (int i = triangleDatas.Count - 1; i >= 0; i--)
+        {
+            if (triangleDatas[i].faceID == faceID) continue;
+
+            for (int j = i - 1; j >= 0; j--)
+            {
+                TriangleData tData1 = triangleDatas[i];
+                TriangleData tData2 = triangleDatas[j];
+                if (tData1.intersectionPoints.Count != 2 || tData2.intersectionPoints.Count != 2)
+                    continue;
+
+                float diff = Vector3.SqrMagnitude(tData1.intersectionPoints[0] - tData2.intersectionPoints[0]);
+                diff += Vector3.SqrMagnitude(tData1.intersectionPoints[1] - tData2.intersectionPoints[1]);
+
+                if (diff < sanitizeTolerance)
+                {
+                    triangleDatas.RemoveAt(i);
+                    continue;
+                }
+
+                diff = Vector3.SqrMagnitude(tData1.intersectionPoints[0] - tData2.intersectionPoints[1]);
+                diff += Vector3.SqrMagnitude(tData1.intersectionPoints[1] - tData2.intersectionPoints[0]);
+
+                if (diff < sanitizeTolerance)
+                {
+                    triangleDatas.RemoveAt(i);
+                    continue;
+                }
+            }
         }
     }
 
