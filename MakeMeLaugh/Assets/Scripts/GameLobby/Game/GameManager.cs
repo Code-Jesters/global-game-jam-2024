@@ -278,6 +278,8 @@ namespace LobbyRelaySample
 
         public void BeginGame()
         {
+            MusicManager.Instance.PlayMusicClip(MusicManager.Instance.mainBattle);
+
             if (m_LocalUser.IsHost.Value)
             {
                 m_LocalLobby.LocalLobbyState.Value = LobbyState.InGame;
@@ -294,6 +296,7 @@ namespace LobbyRelaySample
 
         public void EndGame()
         {
+            MusicManager.Instance.PlayMusicClip(MusicManager.Instance.wandering);
             if (m_LocalUser.IsHost.Value)
             {
                 m_LocalLobby.LocalLobbyState.Value = LobbyState.Lobby;

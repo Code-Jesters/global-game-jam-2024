@@ -14,6 +14,11 @@ public class MusicManager : MonoBehaviour
     public AudioClip defeat; // ambient 4
     public AudioClip victory; // the mountains loop
 
+    void Awake()
+    {
+        Instance = this;
+    }
+
     void Start()
     {
         audioSource = GetComponent<AudioSource>();
@@ -21,7 +26,7 @@ public class MusicManager : MonoBehaviour
         PlayMusicClip(wandering);
     }
 
-    void PlayMusicClip(AudioClip musicClip, float volume = 1.0f) // one at a time
+    public void PlayMusicClip(AudioClip musicClip, float volume = 1.0f) // one at a time
     {
         if (audioSource.clip != musicClip)
         {
@@ -38,7 +43,7 @@ public class MusicManager : MonoBehaviour
         }
     }
 
-    void StopMusic(AudioClip musicClip)
+    public void StopMusic(AudioClip musicClip)
     {
         if (audioSource.clip == musicClip)
         {
