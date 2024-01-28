@@ -4,8 +4,10 @@ using Unity.Services.Authentication;
 using Unity.Services.Core;
 //using Unity.Services.Core.Environments;
 using System;
+using Cysharp.Threading.Tasks;
 
-using UnityEngine; // for Debug.Log()
+using UnityEngine;
+using Unity.Netcode; // for Debug.Log()
 
 namespace Unity.Services.Samples
 {
@@ -38,7 +40,8 @@ namespace Unity.Services.Samples
             if (UnityServices.State == ServicesInitializationState.Initializing)
             {
                 var task = WaitForInitialized();
-                if (await Task.WhenAny(task, Task.Delay(k_InitTimeout)) != task)
+                var checkTask = await Task.WhenAny(task, Task.Delay(k_InitTimeout));
+                if (checkTask != task)
                 {
                     Debug.Log("TryInitServicesAsync() timed out");
                     return false; // We timed out
@@ -90,7 +93,7 @@ namespace Unity.Services.Samples
                 Debug.Log("WaitForInitialized() start");
                 while (UnityServices.State != ServicesInitializationState.Initialized)
                 {
-                    await Task.Delay(100);
+                    await UniTask.Delay(100);
                 }
                 Debug.Log("WaitForInitialized() reached end");
             }

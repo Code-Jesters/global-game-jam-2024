@@ -57,26 +57,66 @@ namespace LobbyRelaySample.ngo
             else
             {
                 Debug.Log("CreateNetworkManager() decided we are NOT the host; awaiting AwaitRelayCode(" + localLobby + ")...");
-                await AwaitRelayCode(localLobby);
-                Debug.Log("CreateNetworkManager() awaiting SetRelayClientData()...");
-                await SetRelayClientData();
-                Debug.Log("CreateNetworkManager() calling NetworkManager.Singleton.StartClient()");
-                NetworkManager.Singleton.StartClient();
+                StartCreateNonHostNetworkManager(localLobby);
             }
         }
 
-        async Task AwaitRelayCode(LocalLobby lobby)
+        bool needFinishCreateNonHostNetworkManager = false;
+        void StartCreateNonHostNetworkManager(LocalLobby lobby)
         {
-            Debug.Log("AwaitRelayCode(" + lobby + ")");
             string relayCode = lobby.RelayCode.Value;
             lobby.RelayCode.onChanged += (code) => {
-                Debug.Log("lobby.RelayCode.onChanged(" + code + ")");
-                relayCode = code;
+                // DJMC: Ignore it if we receive a bad relay code.
+                if (!string.IsNullOrEmpty(code))
+                {
+                    Debug.Log("lobby.RelayCode.onChanged(" + code + ")");
+                    relayCode = code;
+                }
+                else
+                {
+                    Debug.Log("lobby.RelayCode.onChanged() received a null-or-empty relay code");
+                }
             };
-            while (string.IsNullOrEmpty(relayCode))
+            needFinishCreateNonHostNetworkManager = true;
+        }
+
+        bool TryFinishNonHostNetworkManager()
+        {
+            if (!needFinishCreateNonHostNetworkManager)
             {
-                await Task.Delay(100);
+                // vacuously true
+                return true;
             }
+
+            // wait for relayCode to be filled in from elsewhere
+            LocalLobby lobby = m_lobby;
+            string relayCode = lobby.RelayCode.Value;
+            if (string.IsNullOrEmpty(relayCode))
+            {
+                return false;
+            }
+
+            // pre-conditions are met, we're ready to work
+            // if we're here we're executing to the end
+            // we can lower the flag now that says we need to do this
+            needFinishCreateNonHostNetworkManager = false;
+
+            ActuallyFinishNonHostNetworkManager();
+
+            return true;
+        }
+
+        // the work to be done here needs to be in an async Task (since we need to await)
+        async Task ActuallyFinishNonHostNetworkManager()
+        {
+            await SetRelayClientData();
+            Debug.Log("TryFinishNonHostNetworkManager() calling NetworkManager.Singleton.StartClient()");
+            NetworkManager.Singleton.StartClient();
+        }
+
+        void Update()
+        {
+            TryFinishNonHostNetworkManager();
         }
 
         async Task SetRelayHostData()
@@ -102,6 +142,7 @@ namespace LobbyRelaySample.ngo
 
         async Task SetRelayClientData()
         {
+            Debug.Log("SetupInGame.SetRelayClientData()");
             UnityTransport transport = NetworkManager.Singleton.GetComponentInChildren<UnityTransport>();
 
             var joinAllocation = await Relay.Instance.JoinAllocationAsync(m_lobby.RelayCode.Value);
@@ -114,6 +155,7 @@ namespace LobbyRelaySample.ngo
                 joinAllocation.ConnectionData, joinAllocation.HostConnectionData, isSecure);
 
             // DJMC -- added to better support websockets as per https://docs.unity.com/ugs/manual/relay/manual/relay-and-ngo
+            Debug.Log("SetupInGame.SetRelayClientData() calling SetRelayServerData()");
             transport.SetRelayServerData(new RelayServerData(joinAllocation, "wss"));
         }
 
@@ -148,6 +190,7 @@ namespace LobbyRelaySample.ngo
 
         void OnConnectionVerified()
         {
+            Debug.Log("SetupInGame.OnConnectionVerified()");
             m_hasConnectedViaNGO = true;
         }
 
@@ -163,6 +206,7 @@ namespace LobbyRelaySample.ngo
 
         public void OnGameBegin()
         {
+            Debug.Log("SetupInGame.OnGameBegin() -- testing m_hasConnectedViaNGO (" + m_hasConnectedViaNGO + ")");
             if (!m_hasConnectedViaNGO)
             {
                 // If this localPlayer hasn't successfully connected via NGO, forcibly exit the minigame.
@@ -176,6 +220,7 @@ namespace LobbyRelaySample.ngo
         /// </summary>
         public void OnGameEnd()
         {
+            Debug.Log("SetupInGame.OnGameEnd()");
             if (m_doesNeedCleanup)
             {
                 NetworkManager.Singleton.Shutdown(true);

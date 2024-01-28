@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Services.Authentication;
@@ -201,7 +202,10 @@ namespace LobbyRelaySample
                     var changedKey = change.Key;
 
                     if (changedKey == key_RelayCode)
+                    {
+                        Debug.Log("LobbyManager.BindLocalLobbyToRemote() -- DataChanged -- setting RelayCode to " + changedValue.Value.Value);
                         localLobby.RelayCode.Value = changedValue.Value.Value;
+                    }
 
                     if (changedKey == key_LobbyState)
                         localLobby.LocalLobbyState.Value = (LobbyState)int.Parse(changedValue.Value.Value);
@@ -219,7 +223,10 @@ namespace LobbyRelaySample
                     var changedKey = change.Key;
 
                     if (changedKey == key_RelayCode)
+                    {
+                        Debug.Log("LobbyManager.BindLocalLobbyToRemote() -- DataAdded -- setting RelayCode to " + changedValue.Value.Value);
                         localLobby.RelayCode.Value = changedValue.Value.Value;
+                    }
 
                     if (changedKey == key_LobbyState)
                         localLobby.LocalLobbyState.Value = (LobbyState)int.Parse(changedValue.Value.Value);
@@ -235,7 +242,10 @@ namespace LobbyRelaySample
                 {
                     var changedKey = change.Key;
                     if (changedKey == key_RelayCode)
+                    {
+                        Debug.Log("LobbyManager.BindLocalLobbyToRemote() -- DataRemoved -- clearing RelayCode");
                         localLobby.RelayCode.Value = "";
+                    }
                 }
             };
 
@@ -565,7 +575,7 @@ namespace LobbyRelaySample
             while (m_CurrentLobby != null)
             {
                 await SendHeartbeatPingAsync();
-                await Task.Delay(8000);
+                await UniTask.Delay(8000);
             }
         }
 
@@ -619,14 +629,14 @@ namespace LobbyRelaySample
 
             while (m_CoolingDown)
             {
-                await Task.Delay(10);
+                await UniTask.Delay(10);
             }
         }
 
         async Task ParallelCooldownAsync()
         {
             IsCoolingDown = true;
-            await Task.Delay(coolDownMS);
+            await UniTask.Delay(coolDownMS);
             IsCoolingDown = false;
             TaskQueued = false;
             m_TaskCounter = m_ServiceCallTimes;
