@@ -3127,12 +3127,20 @@ PrefabInstance:
       propertyPath: m_RenderMode
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1192816963691994015, guid: 7d5fa85d430759b4ba28e7ee4499e336, type: 3}
+      propertyPath: m_UpdateRectTransformForStandalone
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2624457781080652242, guid: 7d5fa85d430759b4ba28e7ee4499e336, type: 3}
       propertyPath: m_Name
       value: BGCanvas_1
       objectReference: {fileID: 0}
     - target: {fileID: 5036645728717308409, guid: 7d5fa85d430759b4ba28e7ee4499e336, type: 3}
       propertyPath: m_ScreenMatchMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5036645728717308409, guid: 7d5fa85d430759b4ba28e7ee4499e336, type: 3}
+      propertyPath: m_MatchWidthOrHeight
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5036645728717308409, guid: 7d5fa85d430759b4ba28e7ee4499e336, type: 3}
