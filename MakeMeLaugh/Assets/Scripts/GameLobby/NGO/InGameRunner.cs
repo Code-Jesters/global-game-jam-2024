@@ -18,12 +18,16 @@ namespace LobbyRelaySample.ngo
         private SymbolContainer m_symbolContainerPrefab = default;
         [SerializeField]
         private SymbolObject m_symbolObjectPrefab = default;
+        /*
         [SerializeField]
         private SequenceSelector m_sequenceSelector = default;
+        //*/
         [SerializeField]
         private Scorer m_scorer = default;
+        /*
         [SerializeField]
         private SymbolKillVolume m_killVolume = default;
+        //*/
         [SerializeField]
         private IntroOutroRunner m_introOutroRunner = default;
         [SerializeField]
@@ -90,10 +94,13 @@ namespace LobbyRelaySample.ngo
         {
             m_symbolContainerInstance = Instantiate(m_symbolContainerPrefab);
             m_symbolContainerInstance.NetworkObject.Spawn();
+            /*
             ResetPendingSymbolPositions();
             m_killVolume.Initialize(OnSymbolDeactivated);
+            //*/
         }
 
+        /*
         private void ResetPendingSymbolPositions()
         {
             m_pendingSymbolPositions.Clear();
@@ -105,6 +112,7 @@ namespace LobbyRelaySample.ngo
                 m_pendingSymbolPositions.Enqueue(point);
             }
         }
+        //*/
 
         /// <summary>
         /// To verify the connection, invoke a server RPC call that then invokes a client RPC call. After this, the actual setup occurs.
@@ -174,19 +182,29 @@ namespace LobbyRelaySample.ngo
             m_canSpawnInGameObjects = true;
             GameManager.Instance.BeginGame();
             onGameBeginning?.Invoke();
-            m_introOutroRunner.DoIntro(StartMovingSymbols);
+            m_introOutroRunner.DoIntro(StartSomethingTBD);
         }
 
+        void StartSomethingTBD()
+        {
+            // TODO
+        }
+
+        /*
         void StartMovingSymbols()
         {
             m_sequenceSelector.SetTargetsAnimatable();
             if(IsHost)
                 m_symbolContainerInstance.StartMovingSymbols(); //TODO fix this for
         }
+        //*/
 
         public void Update()
         {
+            /*
             CheckIfCanSpawnNewSymbol();
+            //*/
+
             if (m_timeout >= 0)
             {
                 m_timeout -= Time.deltaTime;
@@ -197,6 +215,7 @@ namespace LobbyRelaySample.ngo
                 }
             }
 
+            /*
             void CheckIfCanSpawnNewSymbol()
             {
                 if (!m_canSpawnInGameObjects.GetValueOrDefault() ||
@@ -226,6 +245,7 @@ namespace LobbyRelaySample.ngo
                 symbolObj.SetSymbolIndex_Server(m_sequenceSelector.GetNextSymbol(index));
                 m_remainingSymbolCount++;
             }
+            //*/
         }
 
         /// <summary>
@@ -233,8 +253,11 @@ namespace LobbyRelaySample.ngo
         /// </summary>
         public void OnPlayerInput(ulong playerId, SymbolObject selectedSymbol)
         {
+            /*
             if (selectedSymbol.Clicked)
+            {
                 return;
+            }
 
             if (m_sequenceSelector.ConfirmSymbolCorrect(playerId, selectedSymbol.SymbolIndex))
             {
@@ -243,7 +266,10 @@ namespace LobbyRelaySample.ngo
                 OnSymbolDeactivated();
             }
             else
+            {
                 m_scorer.ScoreFailure(playerId);
+            }
+            //*/
         }
 
         void OnSymbolDeactivated()

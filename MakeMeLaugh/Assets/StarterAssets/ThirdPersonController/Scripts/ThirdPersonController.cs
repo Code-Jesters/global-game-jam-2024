@@ -1,4 +1,6 @@
-﻿ using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 #if ENABLE_INPUT_SYSTEM 
 using UnityEngine.InputSystem;
 #endif
@@ -75,6 +77,11 @@ namespace StarterAssets
         [Tooltip("For locking the camera position on all axis")]
         public bool LockCameraPosition = false;
 
+        // NOTE: Climbing Mechanic
+        public bool climbingGrip = false;
+        public Transform currentClimbingSpot;
+        public ProceduralCharacterAnimation proceduralAnim;
+
         // cinemachine
         private float _cinemachineTargetYaw;
         private float _cinemachineTargetPitch;
@@ -130,6 +137,9 @@ namespace StarterAssets
             {
                 _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
             }
+
+            // climbing mechanic
+            proceduralAnim = GetComponent<ProceduralCharacterAnimation>();
         }
 
         private void Start()
@@ -150,6 +160,9 @@ namespace StarterAssets
             // reset our timeouts on start
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
+
+            // NOTE: Climbing Mechanic
+            InitializeClimbingSpots();
         }
 
         private void Update()
@@ -157,6 +170,7 @@ namespace StarterAssets
             _hasAnimator = TryGetComponent(out _animator);
 
             JumpAndGravity();
+            ClimbingCheck();
             GroundedCheck();
             Move();
         }
@@ -175,6 +189,72 @@ namespace StarterAssets
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
         }
 
+        // NOTE: Climbing Mechanic
+        public List<ClimbingSpot> climbingSpots = new List<ClimbingSpot>();
+        // NOTE: Climbing Mechanic
+        public float climbingDistanceThreshold = 1.0f;
+        public GameObject leftHandTarget;
+        public GameObject rightHandTarget;
+
+        // NOTE: Climbing Mechanic
+        private void InitializeClimbingSpots()
+        {
+            ClimbingSpot[] climbingSpotArray = GameObject.FindObjectsOfType<ClimbingSpot>();
+            // climbingSpots = climbingSpotArray.ToList();
+            climbingSpots.AddRange(climbingSpotArray);
+
+            // also create hand targets
+            leftHandTarget = new GameObject("Left Hand Target");
+            rightHandTarget = new GameObject("Right Hand Target");
+        }
+
+        // NOTE: Climbing Mechanic
+        private void ClimbingCheck()
+        {
+            climbingGrip = false;
+            currentClimbingSpot = null;
+            for (int i = 0; i < climbingSpots.Count; i++)
+            {
+                ClimbingSpot climbingSpot = climbingSpots[i];
+                float distance = (climbingSpot.transform.position - transform.position).magnitude;
+                if (distance < climbingDistanceThreshold)
+                {
+                    climbingGrip = true;
+                    currentClimbingSpot = climbingSpot.transform;
+
+                    // hook up hand targets
+                    leftHandTarget.transform.position = currentClimbingSpot.transform.position + transform.right * -0.5f;
+                    rightHandTarget.transform.position = currentClimbingSpot.transform.position + transform.right * 0.5f;
+                    proceduralAnim.LeftHandTarget = leftHandTarget.transform;
+                    proceduralAnim.RightHandTarget = rightHandTarget.transform;
+                }
+            }
+
+            if (currentClimbingSpot == null)
+            {
+                proceduralAnim.LeftHandTarget = null;
+                proceduralAnim.RightHandTarget = null;
+            }
+
+            // also try to tickle
+            var ticklesPerSecond = 5.0f;
+            var amplitude = 0.5f; // -0.25f;
+            var radians = ticklesPerSecond * Time.time * (2 * Mathf.PI);
+            var cos = Mathf.Cos(radians);
+            if (_input.leftHand)
+            {
+                leftHandTarget.transform.position +=
+                    cos * transform.right *  amplitude +
+                    cos * transform.up    * -amplitude;
+            }
+            if (_input.rightHand)
+            {
+                rightHandTarget.transform.position +=
+                    cos * transform.right * -amplitude +
+                    cos * transform.up    * -amplitude;
+            }
+        }
+
         private void GroundedCheck()
         {
             // set sphere position, with offset
@@ -182,6 +262,12 @@ namespace StarterAssets
                 transform.position.z);
             Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers,
                 QueryTriggerInteraction.Ignore);
+
+            // NOTE: Climbing Mechanic
+            if (climbingGrip)
+            {
+                Grounded = true;
+            }
 
             // update animator if using character
             if (_hasAnimator)
@@ -336,15 +422,24 @@ namespace StarterAssets
                         _animator.SetBool(_animIDFreeFall, true);
                     }
                 }
+                
+                // NOTE: Climbing Mechanic
+                // NOTE: For testing only.
+                // climbingGrip = true;
 
                 // if we are not grounded, do not jump
                 _input.jump = false;
             }
 
-            // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
-            if (_verticalVelocity < _terminalVelocity)
+
+            // NOTE: Climbing Mechanic
+            if (!climbingGrip)
             {
-                _verticalVelocity += Gravity * Time.deltaTime;
+                // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
+                if (_verticalVelocity < _terminalVelocity)
+                {
+                    _verticalVelocity += Gravity * Time.deltaTime;
+                }
             }
         }
 
@@ -376,7 +471,9 @@ namespace StarterAssets
                 if (FootstepAudioClips.Length > 0)
                 {
                     var index = Random.Range(0, FootstepAudioClips.Length);
-                    AudioSource.PlayClipAtPoint(FootstepAudioClips[index], transform.TransformPoint(_controller.center), FootstepAudioVolume);
+                    // MTT CHANGE START (for simplicity's sake, playing at the transform's position suffices)
+                    AudioSource.PlayClipAtPoint(FootstepAudioClips[index], transform.position, FootstepAudioVolume);
+                    // MTT CHANGE END
                 }
             }
         }
@@ -385,7 +482,9 @@ namespace StarterAssets
         {
             if (animationEvent.animatorClipInfo.weight > 0.5f)
             {
-                AudioSource.PlayClipAtPoint(LandingAudioClip, transform.TransformPoint(_controller.center), FootstepAudioVolume);
+                // MTT CHANGE START (for simplicity's sake, playing at the transform's position suffices)
+                AudioSource.PlayClipAtPoint(LandingAudioClip, transform.position, FootstepAudioVolume);
+                // MTT CHANGE END
             }
         }
     }
