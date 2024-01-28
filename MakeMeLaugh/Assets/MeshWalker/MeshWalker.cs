@@ -76,6 +76,9 @@ public class MeshWalker : MonoBehaviour
     {
         this.faceID = faceID;
 
+        // get normal for this face
+        // Vector3 normal = mesh.normals[faceID];
+
         SimplePlane plane = new();
         plane.normal = transform.right;
         plane.validPoint = currentPos;
@@ -132,7 +135,11 @@ public class MeshWalker : MonoBehaviour
             distanceToMove -= distanceToTarget;
 
             if (meshMate.GetTriangleEdgeNeighbor(edgeIndexPair, faceID, out int newFaceID))
+            {
+                Vector3 newFaceNormal = meshMate.GetNormalForFace(newFaceID, meshTransform);
+                transform.up = newFaceNormal;
                 UpdateCurrentTriangle(newFaceID, transform.position);
+            }
         }
         else
         {
