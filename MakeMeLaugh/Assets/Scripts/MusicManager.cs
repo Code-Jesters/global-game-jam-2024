@@ -14,6 +14,8 @@ public class MusicManager : MonoBehaviour
     public AudioClip defeat; // ambient 4
     public AudioClip victory; // the mountains loop
 
+    float musicVolume = 0.25f;
+
     void Awake()
     {
         Instance = this;
@@ -22,11 +24,12 @@ public class MusicManager : MonoBehaviour
     void Start()
     {
         audioSource = GetComponent<AudioSource>();
+        audioSource.volume = musicVolume;
 
         PlayMusicClip(wandering);
     }
 
-    public void PlayMusicClip(AudioClip musicClip, float volume = 1.0f) // one at a time
+    public void PlayMusicClip(AudioClip musicClip) // one at a time
     {
         if (audioSource.clip != musicClip)
         {
@@ -38,7 +41,6 @@ public class MusicManager : MonoBehaviour
         }
         if (!audioSource.isPlaying)
         {
-            audioSource.volume = volume;
             audioSource.Play();
         }
     }
@@ -54,6 +56,11 @@ public class MusicManager : MonoBehaviour
 
             audioSource.clip = null;
         }
+    }
+
+    public void SetMusicVolume(float volume) // between 0.0f and 1.0f
+    {
+        audioSource.volume = volume;
     }
 
     void Update()
