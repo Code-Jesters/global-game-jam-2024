@@ -58,13 +58,10 @@ namespace LobbyRelaySample.ngo
             {
                 Debug.Log("CreateNetworkManager() decided we are NOT the host; awaiting AwaitRelayCode(" + localLobby + ")...");
                 StartCreateNonHostNetworkManager(localLobby);
-                //await CreateNetworkManager_NotHost_Part2(localLobby);
             }
         }
 
-        //
         bool needFinishCreateNonHostNetworkManager = false;
-        bool finishingCreateNonHostNetworkManager = false;
         void StartCreateNonHostNetworkManager(LocalLobby lobby)
         {
             string relayCode = lobby.RelayCode.Value;
@@ -85,6 +82,12 @@ namespace LobbyRelaySample.ngo
 
         bool TryFinishNonHostNetworkManager()
         {
+            if (!needFinishCreateNonHostNetworkManager)
+            {
+                // vacuously true
+                return true;
+            }
+
             // wait for relayCode to be filled in from elsewhere
             LocalLobby lobby = m_lobby;
             string relayCode = lobby.RelayCode.Value;
@@ -93,94 +96,28 @@ namespace LobbyRelaySample.ngo
                 return false;
             }
 
-            /*
-            // this is just an extra layer of security to make sure we don't end up entering this path redundantly
-            if (!finishingCreateNonHostNetworkManager)
-            {
-                finishingCreateNonHostNetworkManager = true;
-
-                await SetRelayClientData();
-                Debug.Log("TryFinishNonHostNetworkManager() calling NetworkManager.Singleton.StartClient()");
-                NetworkManager.Singleton.StartClient();
-
-                finishingCreateNonHostNetworkManager = false;
-            }
-            //*/
+            // pre-conditions are met, we're ready to work
+            // if we're here we're executing to the end
+            // we can lower the flag now that says we need to do this
+            needFinishCreateNonHostNetworkManager = false;
 
             ActuallyFinishNonHostNetworkManager();
 
             return true;
         }
 
+        // the work to be done here needs to be in an async Task (since we need to await)
         async Task ActuallyFinishNonHostNetworkManager()
         {
-            // if we've entered this redundantly, back out
-            if (finishingCreateNonHostNetworkManager)
-            {
-                return;
-            }
-
-            // disallow re-entry
-            finishingCreateNonHostNetworkManager = true;
-
             await SetRelayClientData();
             Debug.Log("TryFinishNonHostNetworkManager() calling NetworkManager.Singleton.StartClient()");
             NetworkManager.Singleton.StartClient();
-
-            // all done
-            finishingCreateNonHostNetworkManager = false;
         }
 
         void Update()
         {
-            if (needFinishCreateNonHostNetworkManager)
-            {
-                if (TryFinishNonHostNetworkManager())
-                {
-                    needFinishCreateNonHostNetworkManager = false;
-                }
-            }
+            TryFinishNonHostNetworkManager();
         }
-        //
-
-        /*
-        async Task CreateNetworkManager_NotHost_Part2(LocalLobby localLobby)
-        {
-            await AwaitRelayCode(localLobby);
-            Debug.Log("CreateNetworkManager() awaiting SetRelayClientData()...");
-            await SetRelayClientData();
-            Debug.Log("CreateNetworkManager() calling NetworkManager.Singleton.StartClient()");
-            NetworkManager.Singleton.StartClient();
-        }
-
-        async Task AwaitRelayCode(LocalLobby lobby)
-        {
-            Debug.Log("AwaitRelayCode(" + lobby + ")");
-            string relayCode = lobby.RelayCode.Value;
-            lobby.RelayCode.onChanged += (code) => {
-                // DJMC: Ignore it if we receive a bad relay code.
-                if (!string.IsNullOrEmpty(code))
-                {
-                    Debug.Log("lobby.RelayCode.onChanged(" + code + ")");
-                    relayCode = code;
-                }
-                else
-                {
-                    Debug.Log("lobby.RelayCode.onChanged() received a null-or-empty relay code");
-                }
-            };
-            while (string.IsNullOrEmpty(relayCode))
-            {
-                var delay = 1000; // 100
-                //await Task.Delay(delay);
-                // DJMC: see https://stackoverflow.com/questions/24525559/task-delay-never-completing
-                await Task.Delay(delay).ConfigureAwait(false);
-                // DJMC: somehow we're not getting here...
-                Debug.Log("AwaitRelayCode() loop...");
-            }
-            Debug.Log("AwaitRelayCode() finished");
-        }
-        //*/
 
         async Task SetRelayHostData()
         {
