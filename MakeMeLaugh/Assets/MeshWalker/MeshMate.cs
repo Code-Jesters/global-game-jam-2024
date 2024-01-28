@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public struct SimplePlane
@@ -81,6 +82,51 @@ public class MeshMate
         v1 = meshTransform.TransformPoint(vertices[vertIdx1]);
         v2 = meshTransform.TransformPoint(vertices[vertIdx2]);
         v3 = meshTransform.TransformPoint(vertices[vertIdx3]);
+    }
+
+    //---------------------------------------------------------------------------
+    public TriangleData GetTriangleData(SimplePlane plane, int faceIdx, Transform MeshTransform)
+    {
+        int startIdx = faceIdx * 3;
+        int vertIdx1 = triangles[startIdx + 0];
+        int vertIdx2 = triangles[startIdx + 1];
+        int vertIdx3 = triangles[startIdx + 2];
+
+        Vector3 v1 = MeshTransform.TransformPoint(vertices[vertIdx1]);
+        Vector3 v2 = MeshTransform.TransformPoint(vertices[vertIdx2]);
+        Vector3 v3 = MeshTransform.TransformPoint(vertices[vertIdx3]);
+
+        Vector3 side1 = v2 - v1;
+        Vector3 side2 = v3 - v1;
+        Vector3 normal = Vector3.Cross(side1, side2).normalized;
+
+        TriangleData triangleData = new()
+        {
+            normal = normal,
+            v1 = v1,
+            v2 = v2,
+            v3 = v3,
+            i1 = vertIdx1,
+            i2 = vertIdx2,
+            i3 = vertIdx3,
+            faceID = faceIdx
+        };
+
+        bool result1, result2, result3;
+        Vector3 point1, point2, point3;
+        (result1, point1) = GetLinePlaneIntersection(plane, v1, v2);
+        (result2, point2) = GetLinePlaneIntersection(plane, v2, v3);
+        (result3, point3) = GetLinePlaneIntersection(plane, v3, v1);
+
+        if ((point2 - point1).sqrMagnitude < 0.05f) result2 = false;
+        if ((point3 - point1).sqrMagnitude < 0.05f) result3 = false;
+        if ((point2 - point3).sqrMagnitude < 0.05f) result2 = false;
+
+        if (result1) triangleData.intersectionPoints.Add(point1);
+        if (result2) triangleData.intersectionPoints.Add(point2);
+        if (result3) triangleData.intersectionPoints.Add(point3);
+
+        return triangleData;
     }
 
     //---------------------------------------------------------------------------
