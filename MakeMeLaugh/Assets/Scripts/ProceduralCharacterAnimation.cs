@@ -2,46 +2,24 @@ using UnityEngine;
 
 public class ProceduralCharacterAnimation : MonoBehaviour
 {
-    public Transform objToPickUp;
     Animator animator;
 
-    public Transform Left_UpperLeg;
-    public Transform Head;
-    public float Weight = 1.0f;
+    public Transform LeftFootTarget;
+    public Transform RightFootTarget;
+    public Transform LeftHandTarget;
+    public Transform RightHandTarget;
+
+    float LeftFootTargetWeight = 0.0f;
+    float RightFootTargetWeight = 0.0f;
+    float LeftHandTargetWeight = 0.0f;
+    float RightHandTargetWeight = 0.0f;
 
     void Start()
     {
         animator = GetComponent<Animator>();
-        //var target = transform.Find("Skeleton/Hips/Left_UpperLeg/Left_LowerLeg/Left_Foot");
-        Left_UpperLeg = transform.Find("Skeleton/Hips/Left_UpperLeg");
-        Head = transform.Find("Skeleton/Hips/Spine/Chest/UpperChest/Neck/Head");
-        objToPickUp = Head;
 
-        Debug.Log("=== DJMC ProceduralCharacterAnimation ===");
-        for (var i = 0; i < animator.parameterCount; ++i)
-        {
-            var parameter = animator.GetParameter(i);
-            string valueStr = "";
-            if (parameter.type == AnimatorControllerParameterType.Float)
-            {
-                valueStr = "" + animator.GetFloat(parameter.name);
-            }
-            else if (parameter.type == AnimatorControllerParameterType.Int)
-            {
-                //valueStr = "" + animator.GetInt(parameter.name);
-                valueStr = "<TBD>";
-            }
-            else if (parameter.type == AnimatorControllerParameterType.Bool)
-            {
-                valueStr = "" + animator.GetBool(parameter.name);
-            }
-            else if (parameter.type == AnimatorControllerParameterType.Trigger)
-            {
-                //valueStr = "" + animator.GetTrigger(parameter.name);
-                valueStr = "<TBD>";
-            }
-            Debug.Log("  " + parameter.name + "<" + parameter.type.ToString() + ">: " + valueStr);
-        }
+        // This works, as an example
+        //var target = transform.Find("Skeleton/Hips/Left_UpperLeg/Left_LowerLeg/Left_Foot");
     }
 
     void Update()
@@ -49,15 +27,22 @@ public class ProceduralCharacterAnimation : MonoBehaviour
         //animator.enabled = false;
     }
 
+    void UpdateTargetIK(Transform target, AvatarIKGoal ikGoal, ref float targetWeight)
+    {
+        if (target != null)
+        {
+            animator.SetIKPosition(ikGoal, target.position);
+        }
+        targetWeight += ((target != null) ? 1.0f : -1.0f) * Time.deltaTime;
+        targetWeight = Mathf.Clamp(targetWeight, 0.0f, 1.0f);
+        animator.SetIKPositionWeight(ikGoal, targetWeight);
+    }
+
     void OnAnimatorIK(int layerIndex)
     {
-        //Debug.Log("OnAnimatorIK(" + layerIndex + ")");
-        //float reach = animator.GetFloat("RightHandReach");
-        float reach = Weight;
-        animator.SetIKPositionWeight(AvatarIKGoal.RightHand, reach);
-        if (objToPickUp != null)
-        {
-            animator.SetIKPosition(AvatarIKGoal.RightHand, objToPickUp.position);
-        }
+        UpdateTargetIK(LeftFootTarget, AvatarIKGoal.LeftFoot, ref LeftFootTargetWeight);
+        UpdateTargetIK(RightFootTarget, AvatarIKGoal.RightFoot, ref RightFootTargetWeight);
+        UpdateTargetIK(LeftHandTarget, AvatarIKGoal.LeftHand, ref LeftHandTargetWeight);
+        UpdateTargetIK(RightHandTarget, AvatarIKGoal.RightHand, ref RightHandTargetWeight);
     }
 }
