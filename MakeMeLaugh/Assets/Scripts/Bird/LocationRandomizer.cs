@@ -2,14 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace MakeMeLaugh.Assets.Scripts.Bird
 {
     public class LocationRandomizer
     {
-        public void GetLocationInProjectedSphere()
+        public static Vector3 GetLocationInProjectedSphere(Vector3 position, float distance)
         {
-            Vector3 eulerVectorDirection = Vector3 direction = Random.insideUnitSphere;
+            Vector3 eulerVectorDirection = UnityEngine.Random.insideUnitSphere;
+            Vector3 offsetPosition = position + eulerVectorDirection * distance;
+            return offsetPosition;
         }
     }
 }

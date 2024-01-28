@@ -1,58 +1,59 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MakeMeLaugh.Assets.Scripts.Bird;
 
 public class BirdManager : MonoBehaviour
 {
     [SerializeField]
     private int maxBirdCount = 50;
 
-    private int birdCount;
+    private int _birdCount;
 
     [field: SerializeField]
-    public int BirdCount
-    {
-        get { return _birdCount};
-        
-        set { _birdCount = value};
-    }
+    public int BirdCount { get; set; }
     
-
-
-
-    public decimal Price
-    {
-        get => _cost;
-        set => _cost = value;
-    }
+    public Vector3 targetPosition = Vector3.zero;
+    public float birdSpawnDistance = 4f;
 
     public List<BirdAgent> Birds = new List<BirdAgent>();
+    
+    public GameObject birdDefaultTarget = null;
 
-    public birdPrefab = null;
+    public GameObject birdPrefab = null;
 
-    // Start is called before the first frame update
-    void Start()
+    public void AddBird()
     {
-        // TODO: Reference all birds in scene.
-        // TODO: Add reference each time a new bird is spawned/added
+        Vector3 defaultLocation = GetBirdSpawnLocation();
+        AddBird(defaultLocation);
     }
-
-    public void AddBird(Vector3 location = null)
+    public void AddBird(Vector3 location)
     {
         if (BirdCount < maxBirdCount)
         {
             BirdCount += 1;
-            SpawnBird(location);
+            GameObject bird = SpawnBird(location);
+            BirdAgent birdAgent = bird.GetComponent<BirdAgent>();
+            birdAgent.target = birdDefaultTarget.transform;
+            Birds.Add(birdAgent);
         }
     }
 
-    public void SpawnBird()
+    public GameObject SpawnBird(Vector3 location)
     {
         if (location == null)
         {
             location = Vector3.zero;
         }
-        GameObject.Instantiate(birdPrefab, location, Quaternion.identity);
+        GameObject bird = GameObject.Instantiate(birdPrefab, location, Quaternion.identity);
+        bird.transform.parent = transform;
+        return bird;
+    }
+    
+    public Vector3 GetBirdSpawnLocation()
+    {
+        Vector3 spawnLocation = LocationRandomizer.GetLocationInProjectedSphere(targetPosition, birdSpawnDistance);
+        return spawnLocation;
     }
 
     public void RemoveAllBirds()

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MakeMeLaugh.Assets.Scripts.Bird;
 
 public class BirdVisualPaceManager : MonoBehaviour
 {
@@ -35,7 +36,14 @@ public class BirdVisualPaceManager : MonoBehaviour
     {
         int birdCountDelta = finalMaxBirdCount - startingBirdCount; 
         float expectedBirdCount = startingBirdCount + birdCountDelta * currentProgress;
-        if (birdManager.)
+        int currentBirdCount = birdManager.BirdCount;
+        if (currentBirdCount < expectedBirdCount)
+        {
+            for (int i = currentBirdCount; i < expectedBirdCount; i++)
+            {
+                birdManager.AddBird();
+            }
+        }
     }
 
     public void ResetProgress()
