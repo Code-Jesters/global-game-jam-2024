@@ -5,17 +5,22 @@ using MakeMeLaugh.Assets.Scripts.Bird;
 
 public class BirdAgent : MonoBehaviour
 {
+    // Speed for direct follow and attacks
     [SerializeField]
-    private float movementSpeed = 2.0f;
-
-    // [SerializeField]
-    // private Transform target;
-    public Transform target;
-
+    private float movementSpeed = 8.0f;
+    
+    // Speed for circling target
     [SerializeField]
+    private float flyCircleSpeed = 8.0f;
+
+    public float flyCircleSpeedBase = 9.0f;
+    public float flyCircleSpeedVariance = 5.0f;
+
+    public float attackToCircleDistanceThreshold = 5.0f;
+
     public BirdBehaviorState moveState;
 
-    public float flyCircleSpeed = 4.0f;
+    public Transform target;
 
     // Update is called once per frame
     void Update()
@@ -36,12 +41,16 @@ public class BirdAgent : MonoBehaviour
         }
     }
 
-    // TODO: Prevent bird from flying to close and gimbal locking/spinning.
-    // (Switch to circle or attack mode if close enough.)
+    // TODO: Prevent bird from flying too close and gimbal locking/spinning.
     public void FlyTowardsTarget()
     {
         transform.LookAt(target);
         transform.position += transform.forward * movementSpeed * Time.deltaTime;
+        float distanceToTarget = (transform.position - target.transform.position).magnitude;
+        if (distanceToTarget < attackToCircleDistanceThreshold)
+        {
+            moveState = BirdBehaviorState.Circling;
+        }
     }
     
     public void FlyAroundTarget()
@@ -50,5 +59,12 @@ public class BirdAgent : MonoBehaviour
         Vector3 birdCircleDirection = Vector3.Cross(birdToTargetVector, Vector3.up).normalized;
         transform.rotation = Quaternion.LookRotation(birdCircleDirection);
         transform.RotateAround (target.position, Vector3.up, flyCircleSpeed * Time.deltaTime);
+    }
+
+    public void SetRandomSpeedInRange()
+    {
+        float min = flyCircleSpeedBase - flyCircleSpeedVariance;
+        float max = flyCircleSpeedBase + flyCircleSpeedVariance;
+        flyCircleSpeed = UnityEngine.Random.Range(min, max);
     }
 }

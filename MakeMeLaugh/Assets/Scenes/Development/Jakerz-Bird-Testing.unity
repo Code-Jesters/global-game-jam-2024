@@ -883,11 +883,6 @@ Light:
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
---- !u!1 &1472003805 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7334755322489845444, guid: ca986c9117d514a449145d89d1ee3b3f, type: 3}
-  m_PrefabInstance: {fileID: 1755829523}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1658153827
 GameObject:
   m_ObjectHideFlags: 0
@@ -1042,6 +1037,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6272192377325419065, guid: ca986c9117d514a449145d89d1ee3b3f, type: 3}
+      propertyPath: target
+      value: 
+      objectReference: {fileID: 146717421}
     - target: {fileID: 7334755322489845444, guid: ca986c9117d514a449145d89d1ee3b3f, type: 3}
       propertyPath: m_Name
       value: BirdPrefab-1
@@ -1049,32 +1048,13 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 7334755322489845444, guid: ca986c9117d514a449145d89d1ee3b3f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1755829525}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ca986c9117d514a449145d89d1ee3b3f, type: 3}
 --- !u!4 &1755829524 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1300711278008774144, guid: ca986c9117d514a449145d89d1ee3b3f, type: 3}
   m_PrefabInstance: {fileID: 1755829523}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1755829525
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1472003805}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 79e9ac6a2b27f7d4c9da1cddfa714e66, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  movementSpeed: 2
-  target: {fileID: 0}
-  moveState: 2
-  flyCircleSpeed: 4
 --- !u!1 &1971613109
 GameObject:
   m_ObjectHideFlags: 0
@@ -1135,7 +1115,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3942de2184b7694096c0420d86a06fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startingBirdCount: 5
+  startingBirdCount: 40
   finalMaxBirdCount: 50
   currentProgress: 0
   birdManager: {fileID: 1971613113}
@@ -1286,9 +1266,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   movementSpeed: 2
+  flyCircleSpeed: 4
   target: {fileID: 146717421}
   moveState: 0
-  flyCircleSpeed: 4
+  flyCircleSpeedBase: 4
+  flyCircleSpeedVariance: 4
 --- !u!1001 &6940966800028321436
 PrefabInstance:
   m_ObjectHideFlags: 0

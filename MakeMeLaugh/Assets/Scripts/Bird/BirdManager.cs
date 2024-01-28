@@ -5,22 +5,20 @@ using MakeMeLaugh.Assets.Scripts.Bird;
 
 public class BirdManager : MonoBehaviour
 {
-    [SerializeField]
-    private int maxBirdCount = 50;
 
     private int _birdCount;
 
     [field: SerializeField]
     public int BirdCount { get; set; }
     
-    public Vector3 targetPosition = Vector3.zero;
+    public int maxBirdCount = 50;
     public float birdSpawnDistance = 4f;
-
-    public List<BirdAgent> Birds = new List<BirdAgent>();
     
-    public GameObject birdDefaultTarget = null;
+    public Transform birdInitialTarget = null;
 
     public GameObject birdPrefab = null;
+
+    public List<BirdAgent> Birds = new List<BirdAgent>();
 
     public void AddBird()
     {
@@ -34,7 +32,8 @@ public class BirdManager : MonoBehaviour
             BirdCount += 1;
             GameObject bird = SpawnBird(location);
             BirdAgent birdAgent = bird.GetComponent<BirdAgent>();
-            birdAgent.target = birdDefaultTarget.transform;
+            birdAgent.target = birdInitialTarget;
+            birdAgent.SetRandomSpeedInRange();
             Birds.Add(birdAgent);
         }
     }
@@ -52,7 +51,7 @@ public class BirdManager : MonoBehaviour
     
     public Vector3 GetBirdSpawnLocation()
     {
-        Vector3 spawnLocation = LocationRandomizer.GetLocationInProjectedSphere(targetPosition, birdSpawnDistance);
+        Vector3 spawnLocation = LocationRandomizer.GetLocationInProjectedSphere(birdInitialTarget.position, birdSpawnDistance);
         return spawnLocation;
     }
 
