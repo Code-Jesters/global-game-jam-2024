@@ -200,13 +200,14 @@ namespace StarterAssets
         // NOTE: Climbing Mechanic
         private void ClimbingCheck()
         {
+            climbingGrip = false;
             for (int i = 0; i < climbingSpots.Count; i++)
             {
                 ClimbingSpot climbingSpot = climbingSpots[i];
                 float distance = (climbingSpot.transform.position - transform.position).magnitude;
                 if (distance < climbingDistanceThreshold)
                 {
-                    Grounded = true;
+                    climbingGrip = true;
                 }
             }
         }
