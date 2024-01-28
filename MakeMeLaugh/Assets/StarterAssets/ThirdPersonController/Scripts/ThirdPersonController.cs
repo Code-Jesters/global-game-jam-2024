@@ -216,12 +216,14 @@ namespace StarterAssets
                     climbingGrip = true;
                     currentClimbingSpot = climbingSpot.transform;
                     proceduralAnim.LeftHandTarget = currentClimbingSpot;
+                    proceduralAnim.RightHandTarget = currentClimbingSpot;
                 }
             }
 
             if (currentClimbingSpot == null)
             {
                 proceduralAnim.LeftHandTarget = null;
+                proceduralAnim.RightHandTarget = null;
             }
         }
 
