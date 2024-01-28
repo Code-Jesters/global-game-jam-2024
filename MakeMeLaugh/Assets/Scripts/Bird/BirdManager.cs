@@ -12,7 +12,9 @@ public class BirdManager : MonoBehaviour
     public int BirdCount { get; set; }
     
     public int maxBirdCount = 50;
-    public float birdSpawnDistance = 4f;
+
+    public float birdSpawnDistanceMin = 10.0f;
+    public float birdSpawnDistanceMax = 50.0f;
     
     public Transform birdInitialTarget = null;
 
@@ -51,7 +53,13 @@ public class BirdManager : MonoBehaviour
     
     public Vector3 GetBirdSpawnLocation()
     {
-        Vector3 spawnLocation = LocationRandomizer.GetLocationInProjectedSphere(birdInitialTarget.position, birdSpawnDistance);
+        // Vector3 spawnLocation = LocationRandomizer.GetLocationInProjectedSphere(birdInitialTarget.position, birdSpawnDistance);
+        // if (spawnLocation.y < birdInitialTarget.position.y)
+        // {
+        //     float difference = birdInitialTarget.position.y - spawnLocation.y;
+        //     spawnLocation.y += difference * 2;
+        // }
+        Vector3 spawnLocation = LocationRandomizer.GetDemiSphereProjectionRange(birdInitialTarget.position, birdSpawnDistanceMin, birdSpawnDistanceMax);
         return spawnLocation;
     }
 

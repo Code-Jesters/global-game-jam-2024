@@ -7,17 +7,16 @@ public class BirdVisualPaceManager : MonoBehaviour
 {
     // NOTE: Float from 0.0 to 1.0 depending on how progressed the game is.
     [SerializeField]
+    private float currentProgress;
+
+    [SerializeField]
     private int startingBirdCount = 0;
 
     [SerializeField]
     private int finalMaxBirdCount = 50;
-    
-    [SerializeField]
-    private float currentProgress;
 
     public BirdManager birdManager;
     
-    public List<BirdAgent> Birds = new List<BirdAgent>();
     // Start is called before the first frame update
     void Start()
     {
@@ -25,11 +24,6 @@ public class BirdVisualPaceManager : MonoBehaviour
         {
             birdManager.AddBird();
         }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
     }
 
     public void CheckBirdCount()

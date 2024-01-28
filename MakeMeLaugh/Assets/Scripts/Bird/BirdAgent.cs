@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using MakeMeLaugh.Assets.Scripts.Bird;
 
+// TODO: Add additional behaviors: If too far, switch to follow/chase mode, if too close, switch back to circle.
 public class BirdAgent : MonoBehaviour
 {
     // Speed for direct follow and attacks
@@ -27,13 +28,13 @@ public class BirdAgent : MonoBehaviour
     {
         switch (moveState)
         {
-            case BirdBehaviorState.Following:
+            case BirdBehaviorState.Follow:
                 FlyTowardsTarget();
                 break;
-            case BirdBehaviorState.Circling:
+            case BirdBehaviorState.Circle:
                 FlyAroundTarget();
                 break;
-            case BirdBehaviorState.Attacking:
+            case BirdBehaviorState.Attack:
                 FlyTowardsTarget();
                 break;
             default:
@@ -49,7 +50,7 @@ public class BirdAgent : MonoBehaviour
         float distanceToTarget = (transform.position - target.transform.position).magnitude;
         if (distanceToTarget < attackToCircleDistanceThreshold)
         {
-            moveState = BirdBehaviorState.Circling;
+            moveState = BirdBehaviorState.Circle;
         }
     }
     
