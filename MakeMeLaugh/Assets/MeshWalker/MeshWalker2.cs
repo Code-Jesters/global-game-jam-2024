@@ -78,6 +78,7 @@ public class MeshWalker2 : MonoBehaviour
             }
 
             SanitizeTriangleData(triangleDatas);
+            EnsureCurrentTriangleData();
             UpdateTriangleForward();
 
             int debugPointIdx = 0;
@@ -97,6 +98,7 @@ public class MeshWalker2 : MonoBehaviour
         meshMate.GetTriangleWorldPositions(faceID, meshTransform, out Vector3 v1, out Vector3 v2, out Vector3 v3);
         OutlineTriangle(v1, v2, v3);
     }
+
 
     //---------------------------------------------------------------------------
     TriangleData GetCurrentTriangleData(int faceID)
@@ -207,6 +209,28 @@ public class MeshWalker2 : MonoBehaviour
                     continue;
                 }
             }
+        }
+    }
+
+    //---------------------------------------------------------------------------
+    void EnsureCurrentTriangleData()
+    {
+        if (GetCurrentTriangleData(faceID) == null)
+        {
+           TriangleData closestTriangleData = null;
+           float closestDistance = float.MaxValue;
+           foreach (TriangleData data in triangleDatas)
+           {
+               float distance = Vector3.SqrMagnitude(data.intersectionPoints[0] - transform.position) +
+                                Vector3.SqrMagnitude(data.intersectionPoints[1] - transform.position);
+
+               if (distance < closestDistance)
+               {
+                  closestDistance = distance;
+                  closestTriangleData = data;
+               }
+           }
+           faceID = closestTriangleData.faceID;
         }
     }
 
