@@ -227,9 +227,8 @@ namespace StarterAssets
             }
 
             // update tickling status
-            // also try to tickle
-            tickler.leftHandActive = _input.leftHand;
-            tickler.rightHandActive = _input.rightHand;
+            tickler.SetLeftHandActive(_input.leftHand);
+            tickler.SetRightHandActive(_input.rightHand);
         }
 
         private void GroundedCheck()
