@@ -1,6 +1,7 @@
 using UnityEngine;
+using Unity.Netcode;
 
-public class GiantBehavior : MonoBehaviour
+public class GiantBehavior : NetworkBehaviour
 {
     public GameObject LeftLegPivot;
     public GameObject RightLegPivot;
@@ -12,6 +13,9 @@ public class GiantBehavior : MonoBehaviour
 
     void Update()
     {
+        // only server should preform logic update
+        if (!IsServer) { return; }
+
         // For now do a procedural walk forward
         var dir = new Vector3(0.0f, 0.0f, 1.0f);
         var speed = 1.0f;
