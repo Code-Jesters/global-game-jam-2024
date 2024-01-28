@@ -79,6 +79,8 @@ namespace StarterAssets
 
         // NOTE: Climbing Mechanic
         public bool climbingGrip = false;
+        public Transform currentClimbingSpot;
+        public ProceduralCharacterAnimation proceduralAnim;
 
         // cinemachine
         private float _cinemachineTargetYaw;
@@ -135,6 +137,9 @@ namespace StarterAssets
             {
                 _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
             }
+
+            // climbing mechanic
+            proceduralAnim = GetComponent<ProceduralCharacterAnimation>();
         }
 
         private void Start()
@@ -201,6 +206,7 @@ namespace StarterAssets
         private void ClimbingCheck()
         {
             climbingGrip = false;
+            currentClimbingSpot = null;
             for (int i = 0; i < climbingSpots.Count; i++)
             {
                 ClimbingSpot climbingSpot = climbingSpots[i];
@@ -208,7 +214,14 @@ namespace StarterAssets
                 if (distance < climbingDistanceThreshold)
                 {
                     climbingGrip = true;
+                    currentClimbingSpot = climbingSpot.transform;
+                    proceduralAnim.LeftHandTarget = currentClimbingSpot;
                 }
+            }
+
+            if (currentClimbingSpot == null)
+            {
+                proceduralAnim.LeftHandTarget = null;
             }
         }
 
