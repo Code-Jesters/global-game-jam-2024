@@ -43,6 +43,7 @@ namespace LobbyRelaySample
         public LocalLobby LocalLobby => m_LocalLobby;
         public Action<GameState> onGameStateChanged;
         public LocalLobbyList LobbyList { get; private set; } = new LocalLobbyList();
+        public GameObject background;
 
         public GameState LocalGameState { get; private set; }
         public LobbyManager LobbyManager { get; private set; }
@@ -284,6 +285,7 @@ namespace LobbyRelaySample
             {
                 m_LocalLobby.LocalLobbyState.Value = LobbyState.InGame;
                 m_LocalLobby.Locked.Value = true;
+                background.SetActive(false);
                 SendLocalLobbyData();
             }
         }
@@ -512,6 +514,7 @@ namespace LobbyRelaySample
             {
                 started = true;
                 UIChangeMenuState(GameState.JoinMenu);
+                background.SetActive(true);
             }
         }
     }
