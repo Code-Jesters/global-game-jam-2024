@@ -1,4 +1,6 @@
-﻿ using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 #if ENABLE_INPUT_SYSTEM 
 using UnityEngine.InputSystem;
 #endif
@@ -75,6 +77,9 @@ namespace StarterAssets
         [Tooltip("For locking the camera position on all axis")]
         public bool LockCameraPosition = false;
 
+        // NOTE: Climbing Mechanic
+        public bool climbingGrip = false;
+
         // cinemachine
         private float _cinemachineTargetYaw;
         private float _cinemachineTargetPitch;
@@ -150,6 +155,9 @@ namespace StarterAssets
             // reset our timeouts on start
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
+
+            // NOTE: Climbing Mechanic
+            InitializeClimbingSpots();
         }
 
         private void Update()
@@ -157,6 +165,7 @@ namespace StarterAssets
             _hasAnimator = TryGetComponent(out _animator);
 
             JumpAndGravity();
+            ClimbingCheck();
             GroundedCheck();
             Move();
         }
@@ -175,6 +184,33 @@ namespace StarterAssets
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
         }
 
+        // NOTE: Climbing Mechanic
+        public List<ClimbingSpot> climbingSpots = new List<ClimbingSpot>();
+        // NOTE: Climbing Mechanic
+        public float climbingDistanceThreshold = 1.0f;
+
+        // NOTE: Climbing Mechanic
+        private void InitializeClimbingSpots()
+        {
+            ClimbingSpot[] climbingSpotArray = GameObject.FindObjectsOfType<ClimbingSpot>();
+            // climbingSpots = climbingSpotArray.ToList();
+            climbingSpots.AddRange(climbingSpotArray);
+        }
+
+        // NOTE: Climbing Mechanic
+        private void ClimbingCheck()
+        {
+            for (int i = 0; i < climbingSpots.Count; i++)
+            {
+                ClimbingSpot climbingSpot = climbingSpots[i];
+                float distance = (climbingSpot.transform.position - transform.position).magnitude;
+                if (distance < climbingDistanceThreshold)
+                {
+                    Grounded = true;
+                }
+            }
+        }
+
         private void GroundedCheck()
         {
             // set sphere position, with offset
@@ -182,6 +218,12 @@ namespace StarterAssets
                 transform.position.z);
             Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers,
                 QueryTriggerInteraction.Ignore);
+
+            // NOTE: Climbing Mechanic
+            if (climbingGrip)
+            {
+                Grounded = true;
+            }
 
             // update animator if using character
             if (_hasAnimator)
@@ -336,15 +378,24 @@ namespace StarterAssets
                         _animator.SetBool(_animIDFreeFall, true);
                     }
                 }
+                
+                // NOTE: Climbing Mechanic
+                // NOTE: For testing only.
+                // climbingGrip = true;
 
                 // if we are not grounded, do not jump
                 _input.jump = false;
             }
 
-            // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
-            if (_verticalVelocity < _terminalVelocity)
+
+            // NOTE: Climbing Mechanic
+            if (!climbingGrip)
             {
-                _verticalVelocity += Gravity * Time.deltaTime;
+                // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
+                if (_verticalVelocity < _terminalVelocity)
+                {
+                    _verticalVelocity += Gravity * Time.deltaTime;
+                }
             }
         }
 
