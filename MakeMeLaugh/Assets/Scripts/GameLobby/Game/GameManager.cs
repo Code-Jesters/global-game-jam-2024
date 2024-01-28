@@ -10,6 +10,8 @@ using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using Unity.Services.Samples;
 using UnityEngine;
+using Cysharp.Threading.Tasks;
+
 #if UNITY_EDITOR
 using ParrelSync;
 #endif
@@ -82,7 +84,7 @@ namespace LobbyRelaySample
         public async Task<LocalPlayer> AwaitLocalUserInitialization()
         {
             while (m_LocalUser == null)
-                await Task.Delay(100);
+                await UniTask.Delay(100);
             return m_LocalUser;
         }
 
