@@ -1190,8 +1190,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   movementSpeed: 2
   flyCircleSpeed: 8
-  flyCircleSpeedBase: 9
-  flyCircleSpeedVariance: 5
+  flyCircleSpeedBase: 25
+  flyCircleSpeedVariance: 15
   attackToCircleDistanceThreshold: 5
   moveState: 2
   target: {fileID: 0}
