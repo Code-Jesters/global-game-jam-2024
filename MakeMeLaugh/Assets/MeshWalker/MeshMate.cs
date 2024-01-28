@@ -30,6 +30,7 @@ public class MeshMate
     readonly int[] triangles;
     Vector3[] vertices;
     Dictionary<Vector3Pair, EdgeTriangles> edgeAdjaceny = new();
+    Dictionary<int, List<int>> triangleNeighbors = new();
 
     //---------------------------------------------------------------------------
     public MeshMate(Mesh mesh)
@@ -39,46 +40,34 @@ public class MeshMate
         vertices = mesh.vertices;
 
         CalculateEdgeAdjaceny();
+        CalculateTriangleAdjacency(vertices, triangles);
 
-        Vector3 v3 = mesh.vertices[9];
-        Vector3 v4 = mesh.vertices[118];
+        // Vector3 v3 = mesh.vertices[9];
+        // Vector3 v4 = mesh.vertices[118];
         // Vector3Pair e1 = new(v3, v4);
         // _AddEdge(e1, 224, 9, 118);
 
         // get the position for vertex 405
-        Vector3 v1 = mesh.vertices[405];
-        Vector3 v2 = mesh.vertices[404];
-        Vector3Pair e2 = new(v1, v2);
+        // Vector3 v1 = mesh.vertices[405];
+        // Vector3 v2 = mesh.vertices[404];
+        // Vector3Pair e2 = new(v1, v2);
         // _AddEdge(e2, 224, 405, 404);
 
-        if (edgeAdjaceny.TryGetValue(e2, out EdgeTriangles index))
-        {
-            Debug.Log($"Edge triangles found: {index.triangleIdx1}, {index.triangleIdx2}");
-            Debug.Log($"Edge verts found: {index.vertIdx1}, {index.vertIdx2}");
-        }
-        else
-        {
-            Debug.Log("Edge not found");
-        }
+        // if (edgeAdjaceny.TryGetValue(e2, out EdgeTriangles index))
+        // {
+        //     Debug.Log($"Edge triangles found: {index.triangleIdx1}, {index.triangleIdx2}");
+        //     Debug.Log($"Edge verts found: {index.vertIdx1}, {index.vertIdx2}");
+        // }
+        // else
+        // {
+        //     Debug.Log("Edge not found");
+        // }
+    }
 
-        void _AddEdge(Vector3Pair edge, int triangleIdx, int v1, int v2)
-        {
-            if (edgeAdjaceny.TryGetValue(edge, out EdgeTriangles index))
-            {
-                index.triangleIdx2 = triangleIdx;
-                index.vertIdx2 = new IntPair(v1, v2);
-            }
-            else
-            {
-                edgeAdjaceny.Add(edge, new EdgeTriangles
-                {
-                    triangleIdx1 = triangleIdx,
-                    triangleIdx2 = -1,
-                    vertIdx1 = new IntPair(v1, v2),
-                    vertIdx2 = null
-                });
-            }
-        }
+    //---------------------------------------------------------------------------
+    public List<int> GetAdjacentFaces(int faceIdx)
+    {
+        return triangleNeighbors[faceIdx];
     }
 
     //---------------------------------------------------------------------------
@@ -185,6 +174,61 @@ public class MeshMate
         Vector3 normal = Vector3.Cross(side1, side2).normalized;
         return normal;
     }
+
+    //---------------------------------------------------------------------------
+    void CalculateTriangleAdjacency(Vector3[] vertices, int[] triangles)
+    {
+        int triangleCount = triangles.Length / 3;
+        triangleNeighbors = new Dictionary<int, List<int>>();
+        float epsilon = 0.0001f; // Adjust this value as needed for your precision requirements
+
+        // Initialize all triangle indices in the dictionary
+        for (int i = 0; i < triangleCount; i++)
+        {
+            triangleNeighbors[i] = new List<int>();
+        }
+
+        // Function to compare vertex positions considering precision
+        bool AreVerticesClose(Vector3 vert1, Vector3 vert2)
+        {
+            return Vector3.Distance(vert1, vert2) < epsilon;
+        }
+
+        // Iterate through each triangle
+        for (int i = 0; i < triangleCount; i++)
+        {
+            // Get vertices of the current triangle
+            Vector3 vert1 = vertices[triangles[i * 3]];
+            Vector3 vert2 = vertices[triangles[i * 3 + 1]];
+            Vector3 vert3 = vertices[triangles[i * 3 + 2]];
+
+            // Check against all other triangles
+            for (int j = 0; j < triangleCount; j++)
+            {
+                if (i == j) continue; // Skip the same triangle
+
+                // Get vertices of the triangle to compare
+                Vector3 compareVert1 = vertices[triangles[j * 3]];
+                Vector3 compareVert2 = vertices[triangles[j * 3 + 1]];
+                Vector3 compareVert3 = vertices[triangles[j * 3 + 2]];
+
+                // Check if they share at least one vertex position
+                if (AreVerticesClose(vert1, compareVert1) || AreVerticesClose(vert1, compareVert2) || AreVerticesClose(vert1, compareVert3) ||
+                    AreVerticesClose(vert2, compareVert1) || AreVerticesClose(vert2, compareVert2) || AreVerticesClose(vert2, compareVert3) ||
+                    AreVerticesClose(vert3, compareVert1) || AreVerticesClose(vert3, compareVert2) || AreVerticesClose(vert3, compareVert3))
+                {
+                    // Add j to the neighbors of i if not already present
+                    if (!triangleNeighbors[i].Contains(j))
+                    {
+                        triangleNeighbors[i].Add(j);
+                    }
+                }
+            }
+        }
+    }
+
+
+
 
     //---------------------------------------------------------------------------
     void CalculateEdgeAdjaceny()
