@@ -225,6 +225,16 @@ namespace StarterAssets
                 proceduralAnim.LeftHandTarget = null;
                 proceduralAnim.RightHandTarget = null;
             }
+
+            // also try to tickle
+            if (_input.leftHand)
+            {
+                Debug.Log("Left Hand!");
+            }
+            if (_input.rightHand)
+            {
+                Debug.Log("Right Hand!");
+            }
         }
 
         private void GroundedCheck()
