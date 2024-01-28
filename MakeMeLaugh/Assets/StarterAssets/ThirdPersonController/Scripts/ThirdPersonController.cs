@@ -193,6 +193,8 @@ namespace StarterAssets
         public List<ClimbingSpot> climbingSpots = new List<ClimbingSpot>();
         // NOTE: Climbing Mechanic
         public float climbingDistanceThreshold = 1.0f;
+        public GameObject leftHandTarget;
+        public GameObject rightHandTarget;
 
         // NOTE: Climbing Mechanic
         private void InitializeClimbingSpots()
@@ -200,6 +202,10 @@ namespace StarterAssets
             ClimbingSpot[] climbingSpotArray = GameObject.FindObjectsOfType<ClimbingSpot>();
             // climbingSpots = climbingSpotArray.ToList();
             climbingSpots.AddRange(climbingSpotArray);
+
+            // also create hand targets
+            leftHandTarget = new GameObject("Left Hand Target");
+            rightHandTarget = new GameObject("Right Hand Target");
         }
 
         // NOTE: Climbing Mechanic
@@ -215,8 +221,12 @@ namespace StarterAssets
                 {
                     climbingGrip = true;
                     currentClimbingSpot = climbingSpot.transform;
-                    proceduralAnim.LeftHandTarget = currentClimbingSpot;
-                    proceduralAnim.RightHandTarget = currentClimbingSpot;
+
+                    // hook up hand targets
+                    leftHandTarget.transform.position = currentClimbingSpot.transform.position + transform.right * -0.5f;
+                    rightHandTarget.transform.position = currentClimbingSpot.transform.position + transform.right * 0.5f;
+                    proceduralAnim.LeftHandTarget = leftHandTarget.transform;
+                    proceduralAnim.RightHandTarget = rightHandTarget.transform;
                 }
             }
 
@@ -227,13 +237,21 @@ namespace StarterAssets
             }
 
             // also try to tickle
+            var ticklesPerSecond = 5.0f;
+            var amplitude = 0.5f; // -0.25f;
+            var radians = ticklesPerSecond * Time.time * (2 * Mathf.PI);
+            var cos = Mathf.Cos(radians);
             if (_input.leftHand)
             {
-                Debug.Log("Left Hand!");
+                leftHandTarget.transform.position +=
+                    cos * transform.right *  amplitude +
+                    cos * transform.up    * -amplitude;
             }
             if (_input.rightHand)
             {
-                Debug.Log("Right Hand!");
+                rightHandTarget.transform.position +=
+                    cos * transform.right * -amplitude +
+                    cos * transform.up    * -amplitude;
             }
         }
 
