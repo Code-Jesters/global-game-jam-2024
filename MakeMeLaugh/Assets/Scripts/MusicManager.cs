@@ -14,7 +14,7 @@ public class MusicManager : MonoBehaviour
     public AudioClip defeat; // ambient 4
     public AudioClip victory; // the mountains loop
 
-    float musicVolume = 0.25f;
+    float musicVolume = 0.1f;
 
     void Awake()
     {
