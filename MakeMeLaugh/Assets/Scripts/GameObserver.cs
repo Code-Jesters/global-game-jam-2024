@@ -98,11 +98,6 @@ public class GameObserver : NetworkBehaviour
         if (tickling) { return; }
         tickling = true;
 
-        foreach (var v in spotsStillToTickle)
-        {
-            Debug.Log(v);
-        }
-
         if (spotsStillToTickle.Contains(objName))
         {
             // Debug.Log($"I tickled {objName}");
