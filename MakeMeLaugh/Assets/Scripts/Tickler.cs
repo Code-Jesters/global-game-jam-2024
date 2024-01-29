@@ -83,8 +83,8 @@ public class Tickler : NetworkBehaviour
     {
         if (targeting.Value)
         {
-            leftHandTarget.transform.position = targetPos.Value + transform.right * -0.5f;
-            rightHandTarget.transform.position = targetPos.Value + transform.right * 0.5f;
+            leftHandTarget.transform.position = targetPos.Value + transform.right * -0.75f + transform.forward * -0.5f;
+            rightHandTarget.transform.position = targetPos.Value + transform.right * 0.75f + transform.forward * -0.5f;
             proceduralAnim.LeftHandTarget = leftHandTarget.transform;
             proceduralAnim.RightHandTarget = rightHandTarget.transform;
         }
