@@ -5,6 +5,7 @@ public class GiantBehavior : NetworkBehaviour
 {
     public GameObject LeftLegPivot;
     public GameObject RightLegPivot;
+    public int health;
 
     void Start()
     {
@@ -31,5 +32,17 @@ public class GiantBehavior : NetworkBehaviour
         var swingForwardBackAngle = xAngle * 0.5f;
         var swingLeftRightAngle = -xAngle * 0.5f;
         transform.localRotation = Quaternion.Euler(swingForwardBackAngle, swingLeftRightAngle, 0.0f);
+    }
+
+    public void TakeDamage(int dmgToTake)
+    {
+        if (health - dmgToTake <= 0)
+        {
+            // player wins
+            return;
+        }
+
+        health -= dmgToTake;
+        // img of health bar changes
     }
 }

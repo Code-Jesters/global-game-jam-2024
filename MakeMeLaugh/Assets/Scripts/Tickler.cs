@@ -1,3 +1,4 @@
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 using Unity.Netcode;
@@ -8,9 +9,11 @@ public class Tickler : NetworkBehaviour
 
     public GameObject leftHandTarget;
     public GameObject rightHandTarget;
+    public GameObserver gameObserver;
 
     // variables to network
     NetworkVariable<bool> targeting = new NetworkVariable<bool>();
+    NetworkVariable<FixedString64Bytes> targetName = new NetworkVariable<FixedString64Bytes>();
     NetworkVariable<Vector3> targetPos = new NetworkVariable<Vector3>();
     NetworkVariable<bool> leftHandActive = new NetworkVariable<bool>();
     NetworkVariable<bool> rightHandActive = new NetworkVariable<bool>();
@@ -18,6 +21,7 @@ public class Tickler : NetworkBehaviour
     void Awake()
     {
         proceduralAnim = GetComponent<ProceduralCharacterAnimation>();
+        gameObserver = FindObjectOfType<GameObserver>();
     }
 
     void Start()
@@ -28,11 +32,11 @@ public class Tickler : NetworkBehaviour
         leftHandTarget = new GameObject("Left Hand Target");
         rightHandTarget = new GameObject("Right Hand Target");
     }
-
+    
     // Public interface
     public void SetTarget(Transform target)
     {
-        SetTargetServerRpc(target.position);
+        SetTargetServerRpc(target.position, target.parent.parent.name);
     }
 
     public void ClearTarget()
@@ -53,10 +57,11 @@ public class Tickler : NetworkBehaviour
     // Server RPCs -- Code that is run on the Server, called by a Client.
 
     [ServerRpc]
-    void SetTargetServerRpc(Vector3 targetPosInput)
+    void SetTargetServerRpc(Vector3 targetPosInput, string objName)
     {
         targeting.Value = true;
         targetPos.Value = targetPosInput;
+        targetName.Value = objName;
     }
 
     [ServerRpc]
@@ -104,12 +109,18 @@ public class Tickler : NetworkBehaviour
             leftHandTarget.transform.position +=
                 cos * transform.right *  amplitude +
                 cos * transform.up    * -amplitude;
+            
+            // Debug.Log(targetName.Value.ToString());
+            gameObserver.Tickle(targetName.Value.ToString());
         }
         if (rightHandActive.Value)
         {
             rightHandTarget.transform.position +=
                 cos * transform.right * -amplitude +
                 cos * transform.up    * -amplitude;
+            
+            // Debug.Log(targetName.Value.ToString());
+            gameObserver.Tickle(targetName.Value.ToString());
         }
     }
 

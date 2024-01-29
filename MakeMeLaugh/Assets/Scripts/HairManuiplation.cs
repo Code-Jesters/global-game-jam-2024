@@ -115,7 +115,6 @@ public class HairManuiplation : MonoBehaviour {
         // This changes the direction that the hair is going to point in, when we are not inputting any movements then we subtract the gravity vector
         // The gravity vector just being (0, -1, 0)
         
-        // [todo] - maybe make only certain part of the grass be pushed when the player collides
         displacementDirection -= direction * Time.deltaTime * 10.0f;
         if(direction.magnitude == 0) // also make the grass breathing
         {

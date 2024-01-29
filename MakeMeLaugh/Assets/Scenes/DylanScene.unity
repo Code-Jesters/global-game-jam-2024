@@ -167,8 +167,6 @@ MonoBehaviour:
   shellColor: {r: 0.45909953, g: 1, b: 0, a: 0}
   occlusionAttenuation: 1
   occlusionBias: 0.239
-  windForce: 0
-  windDirection: 0
 --- !u!4 &679265977
 Transform:
   m_ObjectHideFlags: 0

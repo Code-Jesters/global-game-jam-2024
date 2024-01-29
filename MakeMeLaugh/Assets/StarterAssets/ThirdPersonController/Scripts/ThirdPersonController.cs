@@ -116,6 +116,7 @@ namespace StarterAssets
         private const float _threshold = 0.01f;
 
         private bool _hasAnimator;
+        private GameObserver _gameObserver;
 
         private bool IsCurrentDeviceMouse
         {
@@ -140,6 +141,8 @@ namespace StarterAssets
 
             // climbing mechanic
             tickler = GetComponent<Tickler>();
+            
+            
         }
 
         private void Start()
@@ -163,6 +166,9 @@ namespace StarterAssets
 
             // NOTE: Climbing Mechanic
             InitializeClimbingSpots();
+
+            _gameObserver = FindObjectOfType<GameObserver>();
+            _gameObserver.PickTickleSpots(climbingSpots);
         }
 
         private void Update()
@@ -218,6 +224,8 @@ namespace StarterAssets
 
                     // hook up hand targets
                     tickler.SetTarget(currentClimbingSpot.transform);
+                    
+                    // dmg the giant
                 }
             }
 
