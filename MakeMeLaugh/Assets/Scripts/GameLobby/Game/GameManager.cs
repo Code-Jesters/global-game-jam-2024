@@ -43,6 +43,7 @@ namespace LobbyRelaySample
         public LocalLobby LocalLobby => m_LocalLobby;
         public Action<GameState> onGameStateChanged;
         public LocalLobbyList LobbyList { get; private set; } = new LocalLobbyList();
+        public GameObject background;
 
         public GameState LocalGameState { get; private set; }
         public LobbyManager LobbyManager { get; private set; }
@@ -51,7 +52,7 @@ namespace LobbyRelaySample
         [SerializeField]
         Countdown m_countdown;
 
-        LocalPlayer m_LocalUser;
+        public LocalPlayer m_LocalUser;
         LocalLobby m_LocalLobby;
 
 #if CODEJESTERS_USE_VIVOX
@@ -278,12 +279,15 @@ namespace LobbyRelaySample
 
         public void BeginGame()
         {
+            MusicManager.Instance.PlayMusicClip(MusicManager.Instance.mainBattle);
+
             if (m_LocalUser.IsHost.Value)
             {
                 m_LocalLobby.LocalLobbyState.Value = LobbyState.InGame;
                 m_LocalLobby.Locked.Value = true;
                 SendLocalLobbyData();
             }
+            background.SetActive(false);
         }
 
         public void ClientQuitGame()
@@ -294,6 +298,7 @@ namespace LobbyRelaySample
 
         public void EndGame()
         {
+            MusicManager.Instance.PlayMusicClip(MusicManager.Instance.wandering);
             if (m_LocalUser.IsHost.Value)
             {
                 m_LocalLobby.LocalLobbyState.Value = LobbyState.Lobby;
@@ -509,6 +514,7 @@ namespace LobbyRelaySample
             {
                 started = true;
                 UIChangeMenuState(GameState.JoinMenu);
+                background.SetActive(true);
             }
         }
     }

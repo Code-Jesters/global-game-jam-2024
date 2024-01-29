@@ -1,62 +1,45 @@
-# Project Title
+# Chuckleossus
 
-Simple overview of use/purpose.
+Global Game Jam 2024 entry by team Code Jesters.
 
 ## Description
 
-An in-depth paragraph about your project and overview of use.
+Join your friends to scale and tickle your foe before it reaches the town!
+
+https://globalgamejam.org/games/2024/chuckleossus-3
 
 ## Getting Started
 
 ### Dependencies
 
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
+* Unity 2022.3.18f1
 
 ### Installing
 
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+* https://github.com/Code-Jesters/global-game-jam-2024
 
 ### Executing program
 
-* How to run the program
-* Step-by-step bullets
-```
-code blocks for commands
-```
+* You can run a pre-made WebGL version here: https://danathus.itch.io/global-game-jam-2024-wip
 
 ## Help
 
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
-```
+To build to play with others you'll need to hook into Unity services. None of those keys are saved in the repo.
 
 ## Authors
 
-Contributors names and contact info
-
-ex. Dominique Pizzie  
-ex. [@DomPizzie](https://twitter.com/dompizzie)
-
-## Version History
-
-* 0.2
-    * Various bug fixes and optimizations
-    * See [commit change]() or See [release history]()
-* 0.1
-    * Initial Release
+* [Jake Ramirez](https://github.com/jakerz) - Gameplay Programming
+* [Jacob Tabares](https://github.com/JetPlaneJay) - Music
+* [Michael Guerrero](https://github.com/insominx) - Algorithm Programming
+* [Zach Pallin](https://github.com/zpallin) - Network Programming
+* [Dan McCue](https://github.com/Danathus) - Network Programming
+* [Dylan Leonard](https://github.com/dLeonard2001) - Gameplay Programming
 
 ## License
 
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
+This project is licensed under the MIT License - see the LICENSE.md file for details.
 
 ## Acknowledgments
 
-Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
+Music attribution:
+* [The Mountains](https://timbeek.itch.io/royalty-free-music-pack) by [Tim Beek](info@timbeek.com)
