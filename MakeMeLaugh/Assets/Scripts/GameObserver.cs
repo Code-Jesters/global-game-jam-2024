@@ -262,6 +262,9 @@ public class GameObserver : NetworkBehaviour
         win_loss_message.gameObject.SetActive(true);
         win_loss_message.color = Color.green;
         win_loss_message.text = $"You tickled that giant so good! Great job!";
+
+        // play victory music
+        MusicManager.Instance.PlayMusicClip(MusicManager.Instance.victory);
     }
 
     // runs on everyone's machine downstream of a lose condition
@@ -273,6 +276,8 @@ public class GameObserver : NetworkBehaviour
         win_loss_message.gameObject.SetActive(true);
         win_loss_message.color = Color.red;
         win_loss_message.text = $"Oh no! You ran out of time!";
+
+        MusicManager.Instance.PlayMusicClip(MusicManager.Instance.defeat);
     }
 
     // runs on everyone's machine per update
