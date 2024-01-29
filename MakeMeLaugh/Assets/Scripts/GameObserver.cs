@@ -8,6 +8,13 @@ using Random = UnityEngine.Random;
 
 public class GameObserver : NetworkBehaviour
 {
+    enum GameState
+    {
+        kNormal = 0,
+        kWon = 1,
+        kLost = 2
+    }
+
     // Id imagine a few of these variables need to be server side, not client side
         // I'll start burning the bridge pieces when that bridge arrives 
     // Let alone some of them need to be managed by the server
@@ -32,117 +39,10 @@ public class GameObserver : NetworkBehaviour
     int lastObservedGameState = (int)GameState.kNormal;
 
     // Must be network-synchronized
-    enum GameState
-    {
-        kNormal = 0,
-        kWon = 1,
-        kLost = 2
-    }
     public NetworkVariable<int> phasesCompleted = new NetworkVariable<int>();
     public NetworkVariable<int> currentGameState = new NetworkVariable<int>();
 
-    void Start()
-    {
-        timeRemaining = TimeSpan.FromSeconds(matchTimer * 60);
-        timerText.text = $"{timeRemaining.TotalMinutes}:00";
-
-        spotsToTickle = new List<HairManuiplation>();
-        spotsStillToTickle = new HashSet<string>();
-        climableSpots = new List<ClimbingSpot>();
-        
-        win_loss_message.gameObject.SetActive(false);
-
-        // let's all agree to start in normal game state
-        currentGameState.Value = (int)GameState.kNormal;
-    }
-
-    // runs on everyone's machine per update
-    void OnLocalUpdate()
-    {
-        timerText.gameObject.SetActive(true);
-
-        if (timeRemaining.TotalSeconds > 0)
-        {
-            timeRemaining = timeRemaining.Subtract(TimeSpan.FromSeconds(Time.deltaTime));
-            UpdateTimer(timeRemaining.ToString(@"mm\:ss"));
-        }
-
-        // respond to changes in game state
-        if (lastObservedGameState != currentGameState.Value)
-        {
-            lastObservedGameState = currentGameState.Value;
-            switch ((GameState)currentGameState.Value)
-            {
-                case GameState.kWon:
-                    OnLocalWin();
-                    break;
-                case GameState.kLost:
-                    OnLocalLose();
-                    break;
-            }
-        }
-    }
-
-    // runs only on server's machine
-    void OnServerUpdate()
-    {
-        if (timeRemaining.TotalSeconds <= 0)
-        {
-            ServerActivateLoss();
-        }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        OnLocalUpdate();
-
-        // wall out everyone but the server at this point
-        if (!IsServer) { return; } // relatively first time using networkBehaviour :|
-
-        OnServerUpdate();
-
-        /*
-        // DJMC: commenting out for now -- logic not networked
-
-        // debug for loss cond
-        if (Input.GetKeyDown(KeyCode.F1))
-        {
-            timeRemaining = TimeSpan.FromSeconds(0);
-            UpdateTimer(timeRemaining.ToString(@"mm\:ss"));
-        }
-
-        if (Input.GetKeyDown(KeyCode.F2))
-        {
-            ServerActivateWin();
-        }
-        //*/
-    }
-
-    IEnumerator LerpTickleSpotColors()
-    {
-        Debug.Log("starting coroutine for color lerp");
-        float t = 0;
-        Color minColor = startColor;
-        Color maxColor = targetColor;
-        
-        while (true)
-        {
-            foreach (var t1 in spotsToTickle)
-                t1.shellColor = Color.Lerp(minColor, maxColor, t);
-
-            t += 0.3f * Time.deltaTime;
-
-            if (t > 1)
-            {
-                (maxColor, minColor) = (minColor, maxColor);
-
-                t = 0f;
-            }
-
-            yield return null;
-        }
-    }
+    // code from here to the next section is logic we're still picking apart network-wise //////////
 
     public void PickTickleSpots(List<ClimbingSpot> spots)
     {
@@ -230,6 +130,132 @@ public class GameObserver : NetworkBehaviour
         tickling = false;
     }
 
+    int GetRandomIndex(int min, int max)
+    {
+        return Random.Range(min, max);
+    }
+
+    // Everything from this point to the next section is strictly executed server-side /////////////
+
+    // runs only on server's machine
+    void OnServerUpdate()
+    {
+        if (timeRemaining.TotalSeconds <= 0)
+        {
+            ServerActivateLoss();
+        }
+    }
+
+    void ServerActivateWin()
+    {
+        currentGameState.Value = (int)GameState.kWon;
+    }
+
+    void ServerActivateLoss()
+    {
+        currentGameState.Value = (int)GameState.kLost;
+    }
+
+    // Everything from this point to the next section is strictly executed locally (by everyone) ///
+
+    void Start()
+    {
+        timeRemaining = TimeSpan.FromSeconds(matchTimer * 60);
+        timerText.text = $"{timeRemaining.TotalMinutes}:00";
+
+        spotsToTickle = new List<HairManuiplation>();
+        spotsStillToTickle = new HashSet<string>();
+        climableSpots = new List<ClimbingSpot>();
+        
+        win_loss_message.gameObject.SetActive(false);
+
+        // let's all agree to start in normal game state
+        currentGameState.Value = (int)GameState.kNormal;
+    }
+
+    void UpdateTimer(string newTime)
+    {
+        timerText.text = newTime;
+    }
+
+    // runs on everyone's machine downstream of a win condition
+    void OnLocalWin()
+    {
+        // show you won
+        // swap to win scene/UI
+        
+        win_loss_message.gameObject.SetActive(true);
+        win_loss_message.color = Color.green;
+        win_loss_message.text = $"You tickled that giant so good! Great job!";
+    }
+
+    // runs on everyone's machine downstream of a lose condition
+    void OnLocalLose()
+    {
+        // show timer has ran out
+        // swap to lost scene/UI
+
+        win_loss_message.gameObject.SetActive(true);
+        win_loss_message.color = Color.red;
+        win_loss_message.text = $"Oh no! You ran out of time!";
+    }
+
+    // runs on everyone's machine per update
+    void OnLocalUpdate()
+    {
+        timerText.gameObject.SetActive(true);
+
+        if (timeRemaining.TotalSeconds > 0)
+        {
+            timeRemaining = timeRemaining.Subtract(TimeSpan.FromSeconds(Time.deltaTime));
+            UpdateTimer(timeRemaining.ToString(@"mm\:ss"));
+        }
+
+        // respond to changes in game state
+        if (lastObservedGameState != currentGameState.Value)
+        {
+            lastObservedGameState = currentGameState.Value;
+            switch ((GameState)currentGameState.Value)
+            {
+                case GameState.kWon:
+                    OnLocalWin();
+                    break;
+                case GameState.kLost:
+                    OnLocalLose();
+                    break;
+            }
+        }
+    }
+
+    // this is strictly a visual effect that we want to execute locally
+    IEnumerator LerpTickleSpotColors()
+    {
+        Debug.Log("starting coroutine for color lerp");
+        float t = 0;
+        Color minColor = startColor;
+        Color maxColor = targetColor;
+        
+        while (true)
+        {
+            foreach (var t1 in spotsToTickle)
+            {
+                t1.shellColor = Color.Lerp(minColor, maxColor, t);
+            }
+
+            t += 0.3f * Time.deltaTime;
+
+            if (t > 1)
+            {
+                (maxColor, minColor) = (minColor, maxColor);
+
+                t = 0f;
+            }
+
+            yield return null;
+        }
+    }
+
+    // another visual effect we want to execute locally
     IEnumerator JoltHairColor(HairManuiplation hair)
     {
         // jolt the hair with some damage-related color to show that you tickled the giant
@@ -254,45 +280,32 @@ public class GameObserver : NetworkBehaviour
         }
     }
 
-    int GetRandomIndex(int min, int max)
-    {
-        return Random.Range(min, max);
-    }
+    // Public entry points that fork behavior based on network conditions //////////////////////////
 
-    void UpdateTimer(string newTime)
+    // Update is called once per frame
+    void Update()
     {
-        timerText.text = newTime;
-    }
+        OnLocalUpdate();
 
-    void ServerActivateWin()
-    {
-        currentGameState.Value = (int)GameState.kWon;
-    }
+        // wall out everyone but the server at this point
+        if (!IsServer) { return; } // relatively first time using networkBehaviour :|
 
-    void ServerActivateLoss()
-    {
-        currentGameState.Value = (int)GameState.kLost;
-    }
+        OnServerUpdate();
 
-    // runs on everyone's machine downstream of a win condition
-    void OnLocalWin()
-    {
-        // show you won
-        // swap to win scene/UI
-        
-        win_loss_message.gameObject.SetActive(true);
-        win_loss_message.color = Color.green;
-        win_loss_message.text = $"You tickled that giant so good! Great job!";
-    }
+        /*
+        // DJMC: commenting out for now -- logic not networked
 
-    // runs on everyone's machine downstream of a lose condition
-    void OnLocalLose()
-    {
-        // show timer has ran out
-        // swap to lost scene/UI
+        // debug for loss cond
+        if (Input.GetKeyDown(KeyCode.F1))
+        {
+            timeRemaining = TimeSpan.FromSeconds(0);
+            UpdateTimer(timeRemaining.ToString(@"mm\:ss"));
+        }
 
-        win_loss_message.gameObject.SetActive(true);
-        win_loss_message.color = Color.red;
-        win_loss_message.text = $"Oh no! You ran out of time!";
+        if (Input.GetKeyDown(KeyCode.F2))
+        {
+            ServerActivateWin();
+        }
+        //*/
     }
 }
