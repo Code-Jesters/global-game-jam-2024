@@ -288,6 +288,9 @@ namespace LobbyRelaySample
                 SendLocalLobbyData();
             }
             background.SetActive(false);
+
+            Debug.Log("GameManager.BeginGame()");
+            GameObserver.Instance.OnStartGame();
         }
 
         public void ClientQuitGame()

@@ -8,12 +8,15 @@ using Random = UnityEngine.Random;
 
 public class GameObserver : NetworkBehaviour
 {
-    enum GameState
+    public enum GameState
     {
-        kNormal = 0,
-        kWon = 1,
-        kLost = 2
+        kNotStarted = 0,
+        kStarted = 1,
+        kWon = 2,
+        kLost = 3
     }
+
+    public static GameObserver Instance;
 
     // Id imagine a few of these variables need to be server side, not client side
         // I'll start burning the bridge pieces when that bridge arrives 
@@ -21,12 +24,12 @@ public class GameObserver : NetworkBehaviour
     private TimeSpan timeRemaining; // locally tracked countdown timer till loss
     
     public int spotsTickled;
-    private List<HairManuiplation> spotsToTickle;
+    private List<HairManuiplation> spotsToTickle = new List<HairManuiplation>();
 
     private Coroutine coroutine;
 
-    private HashSet<string> spotsStillToTickle;
-    private List<ClimbingSpot> climableSpots; // this one is complicated to deal with
+    private HashSet<string> spotsStillToTickle = new HashSet<string>();
+    private List<ClimbingSpot> climableSpots = new List<ClimbingSpot>(); // this one is complicated to deal with
 
     // Does not need to be network-synchronized
     public int matchTimer; // public variable to set for time until loss
@@ -36,7 +39,8 @@ public class GameObserver : NetworkBehaviour
     public int[] amountOfSpotsToTicklePerPhase;
     private bool tickling; // only used server-side
     public TextMeshProUGUI win_loss_message;
-    int lastObservedGameState = (int)GameState.kNormal;
+    int lastObservedGameState = (int)GameState.kNotStarted;
+    public List<ClimbingSpot> climbingSpots = new List<ClimbingSpot>(); // canonical ordering of all climbing spots
 
     // Must be network-synchronized
     public NetworkVariable<int> phasesCompleted = new NetworkVariable<int>();
@@ -44,8 +48,9 @@ public class GameObserver : NetworkBehaviour
 
     // code from here to the next section is logic we're still picking apart network-wise //////////
 
-    public void PickTickleSpots(List<ClimbingSpot> spots)
+    void PickTickleSpots(List<ClimbingSpot> spots)
     {
+        Debug.Log("GameObserver.OnLocalGameBegin()");
         if (!IsServer) { return; }
 
         Debug.LogWarning("Changing Tickle Spots");
@@ -140,17 +145,76 @@ public class GameObserver : NetworkBehaviour
     // runs only on server's machine
     void OnServerUpdate()
     {
+        // respond to changes in game state
+        if (lastObservedGameState != currentGameState.Value)
+        {
+            switch ((GameState)currentGameState.Value)
+            {
+                case GameState.kNotStarted:
+                    OnServerGameEnd();
+                    break;
+                case GameState.kStarted:
+                    OnServerGameBegin();
+                    break;
+                case GameState.kWon:
+                    OnServerWin();
+                    break;
+                case GameState.kLost:
+                    OnServerLose();
+                    break;
+            }
+        }
+
+        // regular updates
+        switch ((GameState)currentGameState.Value)
+        {
+            case GameState.kStarted:
+                OnServerUpdateGame();
+                break;
+        }
+    }
+
+    void OnServerGameBegin()
+    {
+        // TODO
+    }
+
+    void OnServerGameEnd()
+    {
+        // TODO (called after win/loss)
+    }
+
+    void OnServerWin()
+    {
+        // TODO (may not be necessary)
+    }
+
+    void OnServerLose()
+    {
+        // TODO (may not be necessary)
+    }
+
+    void OnServerUpdateGame()
+    {
         if (timeRemaining.TotalSeconds <= 0)
         {
             ServerActivateLoss();
         }
     }
 
+    // called once server-side to kick-off game process
+    void ServerActivateGame()
+    {
+        currentGameState.Value = (int)GameState.kStarted;
+    }
+
+    // called once server-side to kick-off game win process
     void ServerActivateWin()
     {
         currentGameState.Value = (int)GameState.kWon;
     }
 
+    // called once server-side to kick-off game lose process
     void ServerActivateLoss()
     {
         currentGameState.Value = (int)GameState.kLost;
@@ -158,19 +222,17 @@ public class GameObserver : NetworkBehaviour
 
     // Everything from this point to the next section is strictly executed locally (by everyone) ///
 
+    void Awake()
+    {
+        Instance = this;
+    }
+
     void Start()
     {
-        timeRemaining = TimeSpan.FromSeconds(matchTimer * 60);
-        timerText.text = $"{timeRemaining.TotalMinutes}:00";
-
-        spotsToTickle = new List<HairManuiplation>();
-        spotsStillToTickle = new HashSet<string>();
-        climableSpots = new List<ClimbingSpot>();
-        
         win_loss_message.gameObject.SetActive(false);
 
-        // let's all agree to start in normal game state
-        currentGameState.Value = (int)GameState.kNormal;
+        // no game started yet
+        currentGameState.Value = (int)GameState.kNotStarted;
     }
 
     void UpdateTimer(string newTime)
@@ -203,20 +265,18 @@ public class GameObserver : NetworkBehaviour
     // runs on everyone's machine per update
     void OnLocalUpdate()
     {
-        timerText.gameObject.SetActive(true);
-
-        if (timeRemaining.TotalSeconds > 0)
-        {
-            timeRemaining = timeRemaining.Subtract(TimeSpan.FromSeconds(Time.deltaTime));
-            UpdateTimer(timeRemaining.ToString(@"mm\:ss"));
-        }
-
         // respond to changes in game state
         if (lastObservedGameState != currentGameState.Value)
         {
-            lastObservedGameState = currentGameState.Value;
+            Debug.Log("OnLocalUpdate() w/ " + lastObservedGameState + " => " + currentGameState.Value);
             switch ((GameState)currentGameState.Value)
             {
+                case GameState.kNotStarted:
+                    OnLocalGameEnd();
+                    break;
+                case GameState.kStarted:
+                    OnLocalGameBegin();
+                    break;
                 case GameState.kWon:
                     OnLocalWin();
                     break;
@@ -224,6 +284,48 @@ public class GameObserver : NetworkBehaviour
                     OnLocalLose();
                     break;
             }
+        }
+
+        // regular updates
+        switch ((GameState)currentGameState.Value)
+        {
+            case GameState.kStarted:
+                OnLocalUpdateGame();
+                break;
+        }
+    }
+
+    void OnLocalGameBegin()
+    {
+        Debug.Log("GameObserver.OnLocalGameBegin()");
+
+        timerText.gameObject.SetActive(true);
+        timeRemaining = TimeSpan.FromSeconds(matchTimer * 60);
+        timerText.text = $"{timeRemaining.TotalMinutes}:00";
+
+        win_loss_message.gameObject.SetActive(false);
+
+        // decide a canonical ordering of climbing spots and hold on to these
+        // FYI leveraging some code that is supposed to guarantee ordering...
+        ClimbingSpot[] climbingSpotArray = GameObject.FindObjectsOfType<ClimbingSpot>();
+        climbingSpotArray = xyz.HierarchicalSorting.Sort(climbingSpotArray);
+        climbingSpots.AddRange(climbingSpotArray);
+
+        // TODO: maybe not call this here?
+        PickTickleSpots(climbingSpots);
+    }
+
+    void OnLocalGameEnd()
+    {
+        // after win/lose screens (TODO)
+    }
+
+    void OnLocalUpdateGame()
+    {
+        if (timeRemaining.TotalSeconds > 0)
+        {
+            timeRemaining = timeRemaining.Subtract(TimeSpan.FromSeconds(Time.deltaTime));
+            UpdateTimer(timeRemaining.ToString(@"mm\:ss"));
         }
     }
 
@@ -282,15 +384,29 @@ public class GameObserver : NetworkBehaviour
 
     // Public entry points that fork behavior based on network conditions //////////////////////////
 
+    public void OnStartGame()
+    {
+        if (!IsServer)
+        {
+            return;
+        }
+
+        ServerActivateGame();
+    }
+
     // Update is called once per frame
     void Update()
     {
         OnLocalUpdate();
 
         // wall out everyone but the server at this point
-        if (!IsServer) { return; } // relatively first time using networkBehaviour :|
+        if (IsServer)
+        {
+            OnServerUpdate();
+        }
 
-        OnServerUpdate();
+        // update this now for next time
+        lastObservedGameState = currentGameState.Value;
 
         /*
         // DJMC: commenting out for now -- logic not networked

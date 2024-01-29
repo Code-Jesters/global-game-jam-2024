@@ -141,8 +141,6 @@ namespace StarterAssets
 
             // climbing mechanic
             tickler = GetComponent<Tickler>();
-            
-            
         }
 
         private void Start()
@@ -168,7 +166,7 @@ namespace StarterAssets
             InitializeClimbingSpots();
 
             _gameObserver = FindObjectOfType<GameObserver>();
-            _gameObserver.PickTickleSpots(climbingSpots);
+            //_gameObserver.PickTickleSpots(climbingSpots);
         }
 
         private void Update()
