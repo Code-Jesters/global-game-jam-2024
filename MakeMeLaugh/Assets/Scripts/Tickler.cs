@@ -29,76 +29,25 @@ public class Tickler : NetworkBehaviour
         rightHandTarget = new GameObject("Right Hand Target");
     }
 
-    // there might be a less verbose way to do all this, but this works, so doing it
-
-    void SetTargetOnServer(Vector3 targetPosInput)
-    {
-        targeting.Value = true;
-        targetPos.Value = targetPosInput;
-    }
-
-    void ClearTargetOnServer()
-    {
-        targeting.Value = false;
-    }
-
-    void SetLeftHandActiveOnServer(bool isActive)
-    {
-        leftHandActive.Value = isActive;
-    }
-
-    void SetRightHandActiveOnServer(bool isActive)
-    {
-        rightHandActive.Value = isActive;
-    }
-
     // Public interface
     public void SetTarget(Transform target)
     {
-        if (IsServer)
-        {
-            SetTargetOnServer(target.position);
-        }
-        else
-        {
-            SetTargetServerRpc(target.position);
-        }
+        SetTargetServerRpc(target.position);
     }
 
     public void ClearTarget()
     {
-        if (IsServer)
-        {
-            ClearTargetOnServer();
-        }
-        else
-        {
-            ClearTargetServerRPC();
-        }
+        ClearTargetServerRPC();
     }
 
     public void SetLeftHandActive(bool isActive)
     {
-        if (IsServer)
-        {
-            SetLeftHandActiveOnServer(isActive);
-        }
-        else
-        {
-            SetLeftHandActiveServerRPC(isActive);
-        }
+        SetLeftHandActiveServerRPC(isActive);
     }
 
     public void SetRightHandActive(bool isActive)
     {
-        if (IsServer)
-        {
-            SetRightHandActiveOnServer(isActive);
-        }
-        else
-        {
-            SetRightHandActiveServerRPC(isActive);
-        }
+        SetRightHandActiveServerRPC(isActive);
     }
 
     // Server RPCs -- Code that is run on the Server, called by a Client.
@@ -106,25 +55,26 @@ public class Tickler : NetworkBehaviour
     [ServerRpc]
     void SetTargetServerRpc(Vector3 targetPosInput)
     {
-        SetTargetOnServer(targetPosInput);
+        targeting.Value = true;
+        targetPos.Value = targetPosInput;
     }
 
     [ServerRpc]
     void ClearTargetServerRPC()
     {
-        ClearTargetOnServer();
+        targeting.Value = false;
     }
 
     [ServerRpc]
     void SetLeftHandActiveServerRPC(bool isActive)
     {
-        SetLeftHandActiveOnServer(isActive);
+        leftHandActive.Value = isActive;
     }
 
     [ServerRpc]
     void SetRightHandActiveServerRPC(bool isActive)
     {
-        SetRightHandActiveOnServer(isActive);
+        rightHandActive.Value = isActive;
     }
 
     // Main logic to update every frame

@@ -17,32 +17,17 @@ public class PlayerDisplay : NetworkBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //emote.OnValueChanged += ApplyEmoteColor;
         if (IsLocalPlayer)
         {
             int emoteValue = (int)GameManager.Instance.m_LocalUser.Emote.Value;
-            /*
-            if (IsServer)
-            {
-                SetEmoteOnServer(emoteValue);
-            }
-            else
-            //*/
-            {
-                SetEmoteServerRpc(emoteValue);
-            }
+            SetEmoteServerRpc(emoteValue);
         }
-    }
-
-    void SetEmoteOnServer(int emoteValue)
-    {
-        emote.Value = emoteValue;
     }
 
     [ServerRpc]
     void SetEmoteServerRpc(int emoteValue)
     {
-        SetEmoteOnServer(emoteValue);
+        emote.Value = emoteValue;
     }
 
     private void ApplyEmoteColor(int previousValue, int newValue)
