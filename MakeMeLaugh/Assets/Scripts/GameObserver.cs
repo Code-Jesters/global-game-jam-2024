@@ -12,16 +12,14 @@ public class GameObserver : NetworkBehaviour
         // I'll start burning the bridge pieces when that bridge arrives 
     // Let alone some of them need to be managed by the server
     private TimeSpan timeRemaining; // locally tracked countdown timer till loss
-    public TextMeshProUGUI win_loss_message;
     
     public int spotsTickled;
     private List<HairManuiplation> spotsToTickle;
 
     private Coroutine coroutine;
 
-    private bool tickling;
-    private HashSet<string> seenNames;
-    private List<ClimbingSpot> climableSpots;
+    private HashSet<string> spotsStillToTickle;
+    private List<ClimbingSpot> climableSpots; // this one is complicated to deal with
 
     // Does not need to be network-synchronized
     public int matchTimer; // public variable to set for time until loss
@@ -29,9 +27,19 @@ public class GameObserver : NetworkBehaviour
     public Color startColor;
     public Color targetColor;
     public int[] amountOfSpotsToTicklePerPhase;
+    private bool tickling; // only used server-side
+    public TextMeshProUGUI win_loss_message;
+    int lastObservedGameState = (int)GameState.kNormal;
 
     // Must be network-synchronized
+    enum GameState
+    {
+        kNormal = 0,
+        kWon = 1,
+        kLost = 2
+    }
     public NetworkVariable<int> phasesCompleted = new NetworkVariable<int>();
+    public NetworkVariable<int> currentGameState = new NetworkVariable<int>();
 
     void Start()
     {
@@ -39,28 +47,64 @@ public class GameObserver : NetworkBehaviour
         timerText.text = $"{timeRemaining.TotalMinutes}:00";
 
         spotsToTickle = new List<HairManuiplation>();
-        seenNames = new HashSet<string>();
+        spotsStillToTickle = new HashSet<string>();
         climableSpots = new List<ClimbingSpot>();
         
         win_loss_message.gameObject.SetActive(false);
+
+        // let's all agree to start in normal game state
+        currentGameState.Value = (int)GameState.kNormal;
     }
 
-    // Update is called once per frame
-    void Update()
+    // runs on everyone's machine per update
+    void OnLocalUpdate()
     {
-        if (!IsServer) { return; } // relatively first time using networkBehaviour :| 
-        
         timerText.gameObject.SetActive(true);
+
         if (timeRemaining.TotalSeconds > 0)
         {
             timeRemaining = timeRemaining.Subtract(TimeSpan.FromSeconds(Time.deltaTime));
             UpdateTimer(timeRemaining.ToString(@"mm\:ss"));
         }
-        else if(timeRemaining.TotalSeconds <= 0)
+
+        // respond to changes in game state
+        if (lastObservedGameState != currentGameState.Value)
         {
-            Lose();
+            lastObservedGameState = currentGameState.Value;
+            switch ((GameState)currentGameState.Value)
+            {
+                case GameState.kWon:
+                    OnLocalWin();
+                    break;
+                case GameState.kLost:
+                    OnLocalLose();
+                    break;
+            }
         }
-        
+    }
+
+    // runs only on server's machine
+    void OnServerUpdate()
+    {
+        if (timeRemaining.TotalSeconds <= 0)
+        {
+            ServerActivateLoss();
+        }
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        OnLocalUpdate();
+
+        // wall out everyone but the server at this point
+        if (!IsServer) { return; } // relatively first time using networkBehaviour :|
+
+        OnServerUpdate();
+
+        /*
+        // DJMC: commenting out for now -- logic not networked
+
         // debug for loss cond
         if (Input.GetKeyDown(KeyCode.F1))
         {
@@ -70,8 +114,9 @@ public class GameObserver : NetworkBehaviour
 
         if (Input.GetKeyDown(KeyCode.F2))
         {
-            Win();
+            ServerActivateWin();
         }
+        //*/
     }
 
     IEnumerator LerpTickleSpotColors()
@@ -101,10 +146,12 @@ public class GameObserver : NetworkBehaviour
 
     public void PickTickleSpots(List<ClimbingSpot> spots)
     {
+        if (!IsServer) { return; }
+
         Debug.LogWarning("Changing Tickle Spots");
         if (phasesCompleted.Value >= amountOfSpotsToTicklePerPhase.Length)
         {
-            Win();
+            ServerActivateWin();
             return;
         }
 
@@ -112,22 +159,28 @@ public class GameObserver : NetworkBehaviour
         climableSpots.AddRange(spots); // really not needed but done for the sake of it - lazy dylan
         
         spotsToTickle.Clear();
-        seenNames.Clear();
-        if(coroutine != null)
+        spotsStillToTickle.Clear();
+        if (coroutine != null)
+        {
             StopCoroutine(coroutine);
+        }
         
         for (int i = 0; i < amountOfSpotsToTicklePerPhase[phasesCompleted.Value]; i++)
         {
             int k = GetRandomIndex(0, spots.Count);
-            if(seenNames.Add(spots[k].GetComponentInParent<HairManuiplation>().name)) // add non-duplicates
+            if (spotsStillToTickle.Add(spots[k].GetComponentInParent<HairManuiplation>().name)) // add non-duplicates
+            {
                 spotsToTickle.Add(spots[k].GetComponentInParent<HairManuiplation>());
+            }
             else // iterate through duplicates until we find a unique climbing spot to tickle
             {
                 k = GetRandomIndex(0, spots.Count); 
-                while (!seenNames.Add(spots[k].transform.parent.parent.name))
+                while (!spotsStillToTickle.Add(spots[k].transform.parent.parent.name))
                 {
-                    if (seenNames.Count == amountOfSpotsToTicklePerPhase[phasesCompleted.Value]) // chosen all the spots we are able to, so stop searching
+                    if (spotsStillToTickle.Count == amountOfSpotsToTicklePerPhase[phasesCompleted.Value]) // chosen all the spots we are able to, so stop searching
+                    {
                         break;
+                    }
                     k = GetRandomIndex(0, spots.Count);
                 }
                 // Debug.Log(spots[k].GetComponentInParent<HairManuiplation>());
@@ -140,18 +193,20 @@ public class GameObserver : NetworkBehaviour
 
     public void Tickle(string objName)
     {
-        if (tickling) return;
+        if (!IsServer) { return; }
+
+        if (tickling) { return; }
         tickling = true;
 
-        foreach (var v in seenNames)
+        foreach (var v in spotsStillToTickle)
         {
             Debug.Log(v);
         }
 
-        if (seenNames.Contains(objName))
+        if (spotsStillToTickle.Contains(objName))
         {
             // Debug.Log($"I tickled {objName}");
-            seenNames.Remove(objName);
+            spotsStillToTickle.Remove(objName);
             for (int i = 0; i < spotsToTickle.Count; i++)
             {
                 if (spotsToTickle[i].transform.name == objName)
@@ -209,7 +264,18 @@ public class GameObserver : NetworkBehaviour
         timerText.text = newTime;
     }
 
-    void Win()
+    void ServerActivateWin()
+    {
+        currentGameState.Value = (int)GameState.kWon;
+    }
+
+    void ServerActivateLoss()
+    {
+        currentGameState.Value = (int)GameState.kLost;
+    }
+
+    // runs on everyone's machine downstream of a win condition
+    void OnLocalWin()
     {
         // show you won
         // swap to win scene/UI
@@ -219,7 +285,8 @@ public class GameObserver : NetworkBehaviour
         win_loss_message.text = $"You tickled that giant so good! Great job!";
     }
 
-    void Lose()
+    // runs on everyone's machine downstream of a lose condition
+    void OnLocalLose()
     {
         // show timer has ran out
         // swap to lost scene/UI
