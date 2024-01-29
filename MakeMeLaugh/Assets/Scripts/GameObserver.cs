@@ -29,7 +29,7 @@ public class GameObserver : NetworkBehaviour
     private Coroutine coroutine;
 
     private HashSet<string> spotsStillToTickle = new HashSet<string>();
-    private List<ClimbingSpot> climableSpots = new List<ClimbingSpot>(); // this one is complicated to deal with
+    private List<int> climableSpotIndices = new List<int>(); // this one is complicated to deal with
 
     // Does not need to be network-synchronized
     public int matchTimer; // public variable to set for time until loss
@@ -48,7 +48,7 @@ public class GameObserver : NetworkBehaviour
 
     // code from here to the next section is logic we're still picking apart network-wise //////////
 
-    void PickTickleSpots(List<ClimbingSpot> spots)
+    void PickTickleSpots(List<int> spotIndices)
     {
         Debug.Log("GameObserver.OnLocalGameBegin()");
         if (!IsServer) { return; }
@@ -60,9 +60,9 @@ public class GameObserver : NetworkBehaviour
             return;
         }
 
-        // climableSpots.Clear();
-        climableSpots.AddRange(spots); // really not needed but done for the sake of it - lazy dylan
-        
+        // climableSpotIndices.Clear();
+        climableSpotIndices.AddRange(spotIndices); // really not needed but done for the sake of it - lazy dylan
+
         spotsToTickle.Clear();
         spotsStillToTickle.Clear();
         if (coroutine != null)
@@ -72,24 +72,29 @@ public class GameObserver : NetworkBehaviour
         
         for (int i = 0; i < amountOfSpotsToTicklePerPhase[phasesCompleted.Value]; i++)
         {
-            int k = GetRandomIndex(0, spots.Count);
-            if (spotsStillToTickle.Add(spots[k].GetComponentInParent<HairManuiplation>().name)) // add non-duplicates
+            int k = GetRandomIndex(0, spotIndices.Count);
+            var climbingSpot = climbingSpots[spotIndices[k]];
+            var parentHair = climbingSpot.GetComponentInParent<HairManuiplation>();
+            if (spotsStillToTickle.Add(parentHair.name)) // add non-duplicates
             {
-                spotsToTickle.Add(spots[k].GetComponentInParent<HairManuiplation>());
+                spotsToTickle.Add(parentHair);
             }
             else // iterate through duplicates until we find a unique climbing spot to tickle
             {
-                k = GetRandomIndex(0, spots.Count); 
-                while (!spotsStillToTickle.Add(spots[k].transform.parent.parent.name))
+                k = GetRandomIndex(0, spotIndices.Count);
+                climbingSpot = climbingSpots[spotIndices[k]];
+                while (!spotsStillToTickle.Add(climbingSpot.transform.parent.parent.name))
                 {
-                    if (spotsStillToTickle.Count == amountOfSpotsToTicklePerPhase[phasesCompleted.Value]) // chosen all the spots we are able to, so stop searching
+                    if (spotsStillToTickle.Count == amountOfSpotsToTicklePerPhase[phasesCompleted.Value])
                     {
+                        // chosen all the spots we are able to, so stop searching
                         break;
                     }
-                    k = GetRandomIndex(0, spots.Count);
+                    k = GetRandomIndex(0, spotIndices.Count);
+                    climbingSpot = climbingSpots[spotIndices[k]];
                 }
                 // Debug.Log(spots[k].GetComponentInParent<HairManuiplation>());
-                spotsToTickle.Add(spots[k].GetComponentInParent<HairManuiplation>());
+                spotsToTickle.Add(climbingSpot.GetComponentInParent<HairManuiplation>());
             }
         }
 
@@ -123,7 +128,7 @@ public class GameObserver : NetworkBehaviour
             {
                 spotsTickled = 0;
                 phasesCompleted.Value++;
-                PickTickleSpots(climableSpots);
+                PickTickleSpots(climableSpotIndices);
             }
         }
 
@@ -306,8 +311,15 @@ public class GameObserver : NetworkBehaviour
         climbingSpotArray = xyz.HierarchicalSorting.Sort(climbingSpotArray);
         climbingSpots.AddRange(climbingSpotArray);
 
+        // make an int array indexing all the climbing spots
+        List<int> climbingSpotIndices = new List<int>();
+        for (var i = 0; i < climbingSpotArray.Length; ++i)
+        {
+            climbingSpotIndices.Add(i);
+        }
+
         // TODO: maybe not call this here?
-        PickTickleSpots(climbingSpots);
+        PickTickleSpots(climbingSpotIndices);
     }
 
     void OnLocalGameEnd()
