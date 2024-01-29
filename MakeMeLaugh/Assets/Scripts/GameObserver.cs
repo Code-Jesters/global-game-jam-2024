@@ -14,15 +14,8 @@ public class GameObserver : NetworkBehaviour
     // Id imagine a few of these variables need to be server side, not client side
         // I'll start burning the bridge pieces when that bridge arrives 
     // Let alone some of them need to be managed by the server
-    
-    public int matchTimer;
-    public TextMeshProUGUI timerText;
-    public Color startColor;
-    public Color targetColor;
-    private TimeSpan timeRemaining; 
-    public int[] amountOfSpotsToTicklePerPhase;
+    private TimeSpan timeRemaining; // locally tracked countdown timer till loss
     public int spotsTickled;
-    public int phasesCompleted;
     private List<HairManuiplation> spotsToTickle;
 
     private Coroutine coroutine;
@@ -30,7 +23,17 @@ public class GameObserver : NetworkBehaviour
     private bool tickling;
     private HashSet<string> seenNames;
     private List<ClimbingSpot> climableSpots;
-    
+
+    // Does not need to be network-synchronized
+    public int matchTimer; // public variable to set for time until loss
+    public TextMeshProUGUI timerText;
+    public Color startColor;
+    public Color targetColor;
+    public int[] amountOfSpotsToTicklePerPhase;
+
+    // Must be network-synchronized
+    public NetworkVariable<int> phasesCompleted = new NetworkVariable<int>();
+
     void Start()
     {
         timeRemaining = TimeSpan.FromSeconds(matchTimer * 60);
@@ -93,7 +96,7 @@ public class GameObserver : NetworkBehaviour
     public void PickTickleSpots(List<ClimbingSpot> spots)
     {
         Debug.LogWarning("Changing Tickle Spots");
-        if (phasesCompleted >= amountOfSpotsToTicklePerPhase.Length)
+        if (phasesCompleted.Value >= amountOfSpotsToTicklePerPhase.Length)
         {
             Win();
             return;
@@ -107,7 +110,7 @@ public class GameObserver : NetworkBehaviour
         if(coroutine != null)
             StopCoroutine(coroutine);
         
-        for (int i = 0; i < amountOfSpotsToTicklePerPhase[phasesCompleted]; i++)
+        for (int i = 0; i < amountOfSpotsToTicklePerPhase[phasesCompleted.Value]; i++)
         {
             int k = GetRandomIndex(0, spots.Count);
             if(seenNames.Add(spots[k].GetComponentInParent<HairManuiplation>().name)) // add non-duplicates
@@ -117,7 +120,7 @@ public class GameObserver : NetworkBehaviour
                 k = GetRandomIndex(0, spots.Count); 
                 while (!seenNames.Add(spots[k].transform.parent.parent.name))
                 {
-                    if (seenNames.Count == amountOfSpotsToTicklePerPhase[phasesCompleted]) // chosen all the spots we are able to, so stop searching
+                    if (seenNames.Count == amountOfSpotsToTicklePerPhase[phasesCompleted.Value]) // chosen all the spots we are able to, so stop searching
                         break;
                     k = GetRandomIndex(0, spots.Count);
                 }
@@ -155,10 +158,10 @@ public class GameObserver : NetworkBehaviour
             
             spotsTickled++;
 
-            if (spotsTickled == amountOfSpotsToTicklePerPhase[phasesCompleted])
+            if (spotsTickled == amountOfSpotsToTicklePerPhase[phasesCompleted.Value])
             {
                 spotsTickled = 0;
-                phasesCompleted++;
+                phasesCompleted.Value++;
                 PickTickleSpots(climableSpots);
             }
         }
