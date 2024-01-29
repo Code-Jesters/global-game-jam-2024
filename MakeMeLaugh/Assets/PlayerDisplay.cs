@@ -10,20 +10,22 @@ public class PlayerDisplay : NetworkBehaviour
 {
     [SerializeField]
     private GameObject body;
-    NetworkVariable<int> emote = new NetworkVariable<int>();
+    public NetworkVariable<int> emote = new NetworkVariable<int>();
 
     // Start is called before the first frame update
     void Start()
     {
         emote.OnValueChanged += ApplyEmoteColor;
-        if (this.IsLocalPlayer)
+        if (IsLocalPlayer)
         {
             int emoteValue = (int)GameManager.Instance.m_LocalUser.Emote.Value;
+            /*
             if (IsServer)
             {
                 SetEmoteOnServer(emoteValue);
             }
             else
+            //*/
             {
                 SetEmoteServerRpc(emoteValue);
             }
