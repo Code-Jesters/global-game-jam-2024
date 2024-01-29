@@ -42,11 +42,12 @@ public class GameObserver : NetworkBehaviour
     int lastObservedGameState = (int)GameState.kNotStarted;
     public List<ClimbingSpot> climbingSpots = new List<ClimbingSpot>(); // canonical ordering of all climbing spots
     private List<HairManuiplation> allHairManipsOrdered = new List<HairManuiplation>(); // canonical ordering of all hair manipulations
+    List<int> lastObservedHairManipIndicesToTickle = new List<int>();
 
     // Must be network-synchronized
     public NetworkVariable<int> phasesCompleted = new NetworkVariable<int>();
     public NetworkVariable<int> currentGameState = new NetworkVariable<int>();
-    //private NetworkList<int> hairManipIndicesToTickle = new NetworkList<int>(); // index into allHairManipsOrdered
+    private NetworkList<int> hairManipIndicesToTickle = new NetworkList<int>(); // index into allHairManipsOrdered
 
     // code from here to the next section is logic we're still picking apart network-wise //////////
 
@@ -66,9 +67,8 @@ public class GameObserver : NetworkBehaviour
         climableSpotIndices.AddRange(spotIndices); // really not needed but done for the sake of it - lazy dylan
 
         //
-        List<int> hairManipIndicesToTickle = new List<int>();
-        //
-        //spotsToTickle.Clear();
+        //List<int> hairManipIndicesToTickle = new List<int>();
+        hairManipIndicesToTickle.Clear();
         spotsStillToTickle.Clear();
 
         for (int i = 0; i < amountOfSpotsToTicklePerPhase[phasesCompleted.Value]; i++)
@@ -78,10 +78,7 @@ public class GameObserver : NetworkBehaviour
             var parentHair = climbingSpot.GetComponentInParent<HairManuiplation>();
             if (spotsStillToTickle.Add(parentHair.name)) // add non-duplicates
             {
-                //
                 hairManipIndicesToTickle.Add(allHairManipsOrdered.FindIndex(x => x == parentHair));
-                //
-                //spotsToTickle.Add(parentHair);
             }
             else // iterate through duplicates until we find a unique climbing spot to tickle
             {
@@ -101,27 +98,8 @@ public class GameObserver : NetworkBehaviour
                 //
                 parentHair = climbingSpot.GetComponentInParent<HairManuiplation>();
                 hairManipIndicesToTickle.Add(allHairManipsOrdered.FindIndex(x => x == parentHair));
-                //
-                //spotsToTickle.Add(parentHair);
             }
         }
-
-        // convert hairManipIndicesToTickle to spotsToTickle
-        //
-        //*
-        spotsToTickle.Clear();
-        for (var i = 0; i < hairManipIndicesToTickle.Count; ++i)
-        {
-            spotsToTickle.Add(allHairManipsOrdered[hairManipIndicesToTickle[i]]);
-        }
-        //*/
-        //
-
-        if (coroutine != null)
-        {
-            StopCoroutine(coroutine);
-        }
-        coroutine = StartCoroutine(LerpTickleSpotColors());
     }
 
     public void Tickle(string objName)
@@ -364,6 +342,33 @@ public class GameObserver : NetworkBehaviour
         {
             timeRemaining = timeRemaining.Subtract(TimeSpan.FromSeconds(Time.deltaTime));
             UpdateTimer(timeRemaining.ToString(@"mm\:ss"));
+        }
+
+        bool newTickleList = lastObservedHairManipIndicesToTickle.Count != hairManipIndicesToTickle.Count;
+        for (var i = 0; !newTickleList && i < lastObservedHairManipIndicesToTickle.Count; ++i)
+        {
+            newTickleList = lastObservedHairManipIndicesToTickle[i] != hairManipIndicesToTickle[i];
+        }
+        if (newTickleList)
+        {
+            lastObservedHairManipIndicesToTickle.Clear();
+            for (var i = 0; i < hairManipIndicesToTickle.Count; ++i)
+            {
+                lastObservedHairManipIndicesToTickle.Add(hairManipIndicesToTickle[i]);
+            }
+
+            // convert hairManipIndicesToTickle to spotsToTickle
+            spotsToTickle.Clear();
+            for (var i = 0; i < hairManipIndicesToTickle.Count; ++i)
+            {
+                spotsToTickle.Add(allHairManipsOrdered[hairManipIndicesToTickle[i]]);
+            }
+
+            if (coroutine != null)
+            {
+                StopCoroutine(coroutine);
+            }
+            coroutine = StartCoroutine(LerpTickleSpotColors());
         }
     }
 
