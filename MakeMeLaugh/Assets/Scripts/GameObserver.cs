@@ -18,19 +18,6 @@ public class GameObserver : NetworkBehaviour
 
     public static GameObserver Instance;
 
-    // Id imagine a few of these variables need to be server side, not client side
-        // I'll start burning the bridge pieces when that bridge arrives 
-    // Let alone some of them need to be managed by the server
-    private TimeSpan timeRemaining; // locally tracked countdown timer till loss
-    
-    public int spotsTickled;
-    private List<HairManuiplation> spotsToTickle = new List<HairManuiplation>();
-
-    private Coroutine coroutine;
-
-    private HashSet<string> spotsStillToTickle = new HashSet<string>();
-    private List<int> climableSpotIndices = new List<int>(); // this one is complicated to deal with
-
     // Does not need to be network-synchronized
     public int matchTimer; // public variable to set for time until loss
     public TextMeshProUGUI timerText;
@@ -43,13 +30,19 @@ public class GameObserver : NetworkBehaviour
     public List<ClimbingSpot> climbingSpots = new List<ClimbingSpot>(); // canonical ordering of all climbing spots
     private List<HairManuiplation> allHairManipsOrdered = new List<HairManuiplation>(); // canonical ordering of all hair manipulations
     List<int> lastObservedHairManipIndicesToTickle = new List<int>();
+    private List<HairManuiplation> spotsToTickle = new List<HairManuiplation>();
+    public int spotsTickled; // only server-side
+    private Coroutine coroutine;
+    private TimeSpan timeRemaining; // locally tracked countdown timer till loss
+    private HashSet<string> spotsStillToTickle = new HashSet<string>(); // strictly server-side
+    private List<int> climableSpotIndices = new List<int>(); // strictly used server-side
 
     // Must be network-synchronized
     public NetworkVariable<int> phasesCompleted = new NetworkVariable<int>();
     public NetworkVariable<int> currentGameState = new NetworkVariable<int>();
     private NetworkList<int> hairManipIndicesToTickle = new NetworkList<int>(); // index into allHairManipsOrdered
 
-    // code from here to the next section is logic we're still picking apart network-wise //////////
+    // Everything from this point to the next section is strictly executed server-side /////////////
 
     void PickTickleSpots(List<int> spotIndices)
     {
@@ -117,8 +110,12 @@ public class GameObserver : NetworkBehaviour
             {
                 if (spotsToTickle[i].transform.name == objName)
                 {
-                    StartCoroutine(JoltHairColor(spotsToTickle[i]));
+                    //
+                    StartJoltHairColorClientRpc(allHairManipsOrdered.FindIndex(x => x == spotsToTickle[i]));
+                    //
+                    //StartCoroutine(JoltHairColor(spotsToTickle[i]));
                     spotsToTickle.RemoveAt(i);
+                    hairManipIndicesToTickle.RemoveAt(i);
                     break;
                 }
             }
@@ -140,8 +137,6 @@ public class GameObserver : NetworkBehaviour
     {
         return Random.Range(min, max);
     }
-
-    // Everything from this point to the next section is strictly executed server-side /////////////
 
     // runs only on server's machine
     void OnServerUpdate()
@@ -245,6 +240,12 @@ public class GameObserver : NetworkBehaviour
 
         // no game started yet
         currentGameState.Value = (int)GameState.kNotStarted;
+    }
+
+    [ClientRpc]
+    void StartJoltHairColorClientRpc(int hairManipIndex)
+    {
+        StartCoroutine(JoltHairColor(allHairManipsOrdered[hairManipIndex]));
     }
 
     void UpdateTimer(string newTime)
