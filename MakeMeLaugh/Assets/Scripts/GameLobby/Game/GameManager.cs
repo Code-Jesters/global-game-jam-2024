@@ -52,7 +52,7 @@ namespace LobbyRelaySample
         [SerializeField]
         Countdown m_countdown;
 
-        LocalPlayer m_LocalUser;
+        public LocalPlayer m_LocalUser;
         LocalLobby m_LocalLobby;
 
 #if CODEJESTERS_USE_VIVOX
@@ -285,9 +285,9 @@ namespace LobbyRelaySample
             {
                 m_LocalLobby.LocalLobbyState.Value = LobbyState.InGame;
                 m_LocalLobby.Locked.Value = true;
-                background.SetActive(false);
                 SendLocalLobbyData();
             }
+            background.SetActive(false);
         }
 
         public void ClientQuitGame()
