@@ -18,8 +18,27 @@ public class PlayerDisplay : NetworkBehaviour
         emote.OnValueChanged += ApplyEmoteColor;
         if (this.IsLocalPlayer)
         {
-            emote.Value = (int)GameManager.Instance.m_LocalUser.Emote.Value;
+            int emoteValue = (int)GameManager.Instance.m_LocalUser.Emote.Value;
+            if (IsServer)
+            {
+                SetEmoteOnServer(emoteValue);
+            }
+            else
+            {
+                SetEmoteServerRpc(emoteValue);
+            }
         }
+    }
+
+    void SetEmoteOnServer(int emoteValue)
+    {
+        emote.Value = emoteValue;
+    }
+
+    [ServerRpc]
+    void SetEmoteServerRpc(int emoteValue)
+    {
+        SetEmoteOnServer(emoteValue);
     }
 
     private void ApplyEmoteColor(int previousValue, int newValue)
