@@ -1,12 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using StarterAssets;
 using TMPro;
 using UnityEngine;
 using Unity.Netcode;
-using UnityEditor.SceneManagement;
 using Random = UnityEngine.Random;
 
 public class GameObserver : NetworkBehaviour
@@ -14,6 +11,8 @@ public class GameObserver : NetworkBehaviour
     // Id imagine a few of these variables need to be server side, not client side
         // I'll start burning the bridge pieces when that bridge arrives 
     // Let alone some of them need to be managed by the server
+
+    public TextMeshProUGUI win_loss_message;
     
     public int matchTimer;
     public TextMeshProUGUI timerText;
@@ -39,6 +38,8 @@ public class GameObserver : NetworkBehaviour
         spotsToTickle = new List<HairManuiplation>();
         seenNames = new HashSet<string>();
         climableSpots = new List<ClimbingSpot>();
+        
+        win_loss_message.gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -62,6 +63,11 @@ public class GameObserver : NetworkBehaviour
         {
             timeRemaining = TimeSpan.FromSeconds(0);
             UpdateTimer(timeRemaining.ToString(@"mm\:ss"));
+        }
+
+        if (Input.GetKeyDown(KeyCode.F2))
+        {
+            Win();
         }
     }
 
@@ -205,16 +211,18 @@ public class GameObserver : NetworkBehaviour
         // show you won
         // swap to win scene/UI
         
-        Debug.Log("you win");
-        Debug.Break();
+        win_loss_message.gameObject.SetActive(true);
+        win_loss_message.color = Color.green;
+        win_loss_message.text = $"You tickled that giant so good! Great job!";
     }
 
     void Lose()
     {
         // show timer has ran out
         // swap to lost scene/UI
-        
-        Debug.Log("you lose");
-        Debug.Break();
+
+        win_loss_message.gameObject.SetActive(true);
+        win_loss_message.color = Color.red;
+        win_loss_message.text = $"Oh no! You ran out of time!";
     }
 }
