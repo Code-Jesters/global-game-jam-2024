@@ -41,10 +41,12 @@ public class GameObserver : NetworkBehaviour
     public TextMeshProUGUI win_loss_message;
     int lastObservedGameState = (int)GameState.kNotStarted;
     public List<ClimbingSpot> climbingSpots = new List<ClimbingSpot>(); // canonical ordering of all climbing spots
+    private List<HairManuiplation> allHairManipsOrdered = new List<HairManuiplation>(); // canonical ordering of all hair manipulations
 
     // Must be network-synchronized
     public NetworkVariable<int> phasesCompleted = new NetworkVariable<int>();
     public NetworkVariable<int> currentGameState = new NetworkVariable<int>();
+    //private NetworkList<int> hairManipIndicesToTickle = new NetworkList<int>(); // index into allHairManipsOrdered
 
     // code from here to the next section is logic we're still picking apart network-wise //////////
 
@@ -63,13 +65,12 @@ public class GameObserver : NetworkBehaviour
         // climableSpotIndices.Clear();
         climableSpotIndices.AddRange(spotIndices); // really not needed but done for the sake of it - lazy dylan
 
-        spotsToTickle.Clear();
+        //
+        List<int> hairManipIndicesToTickle = new List<int>();
+        //
+        //spotsToTickle.Clear();
         spotsStillToTickle.Clear();
-        if (coroutine != null)
-        {
-            StopCoroutine(coroutine);
-        }
-        
+
         for (int i = 0; i < amountOfSpotsToTicklePerPhase[phasesCompleted.Value]; i++)
         {
             int k = GetRandomIndex(0, spotIndices.Count);
@@ -77,7 +78,10 @@ public class GameObserver : NetworkBehaviour
             var parentHair = climbingSpot.GetComponentInParent<HairManuiplation>();
             if (spotsStillToTickle.Add(parentHair.name)) // add non-duplicates
             {
-                spotsToTickle.Add(parentHair);
+                //
+                hairManipIndicesToTickle.Add(allHairManipsOrdered.FindIndex(x => x == parentHair));
+                //
+                //spotsToTickle.Add(parentHair);
             }
             else // iterate through duplicates until we find a unique climbing spot to tickle
             {
@@ -94,10 +98,29 @@ public class GameObserver : NetworkBehaviour
                     climbingSpot = climbingSpots[spotIndices[k]];
                 }
                 // Debug.Log(spots[k].GetComponentInParent<HairManuiplation>());
-                spotsToTickle.Add(climbingSpot.GetComponentInParent<HairManuiplation>());
+                //
+                parentHair = climbingSpot.GetComponentInParent<HairManuiplation>();
+                hairManipIndicesToTickle.Add(allHairManipsOrdered.FindIndex(x => x == parentHair));
+                //
+                //spotsToTickle.Add(parentHair);
             }
         }
 
+        // convert hairManipIndicesToTickle to spotsToTickle
+        //
+        //*
+        spotsToTickle.Clear();
+        for (var i = 0; i < hairManipIndicesToTickle.Count; ++i)
+        {
+            spotsToTickle.Add(allHairManipsOrdered[hairManipIndicesToTickle[i]]);
+        }
+        //*/
+        //
+
+        if (coroutine != null)
+        {
+            StopCoroutine(coroutine);
+        }
         coroutine = StartCoroutine(LerpTickleSpotColors());
     }
 
@@ -176,7 +199,18 @@ public class GameObserver : NetworkBehaviour
 
     void OnServerGameBegin()
     {
-        // TODO
+        // pick an initial set of tickle spots
+
+        // make an int array indexing all the climbing spots to start
+        List<int> climbingSpotIndices = new List<int>();
+        var count = climbingSpots.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            climbingSpotIndices.Add(i);
+        }
+
+        // apply our first set of tickle spots
+        PickTickleSpots(climbingSpotIndices);
     }
 
     void OnServerGameEnd()
@@ -309,17 +343,14 @@ public class GameObserver : NetworkBehaviour
         // FYI leveraging some code that is supposed to guarantee ordering...
         ClimbingSpot[] climbingSpotArray = GameObject.FindObjectsOfType<ClimbingSpot>();
         climbingSpotArray = xyz.HierarchicalSorting.Sort(climbingSpotArray);
+        climbingSpots = new List<ClimbingSpot>();
         climbingSpots.AddRange(climbingSpotArray);
 
-        // make an int array indexing all the climbing spots
-        List<int> climbingSpotIndices = new List<int>();
-        for (var i = 0; i < climbingSpotArray.Length; ++i)
-        {
-            climbingSpotIndices.Add(i);
-        }
-
-        // TODO: maybe not call this here?
-        PickTickleSpots(climbingSpotIndices);
+        // also decide a canonical ordering of all hair manipulations
+        HairManuiplation[] hairManipulationArray = GameObject.FindObjectsOfType<HairManuiplation>();
+        hairManipulationArray = xyz.HierarchicalSorting.Sort(hairManipulationArray);
+        allHairManipsOrdered = new List<HairManuiplation>();
+        allHairManipsOrdered.AddRange(hairManipulationArray);
     }
 
     void OnLocalGameEnd()
@@ -339,7 +370,6 @@ public class GameObserver : NetworkBehaviour
     // this is strictly a visual effect that we want to execute locally
     IEnumerator LerpTickleSpotColors()
     {
-        Debug.Log("starting coroutine for color lerp");
         float t = 0;
         Color minColor = startColor;
         Color maxColor = targetColor;
