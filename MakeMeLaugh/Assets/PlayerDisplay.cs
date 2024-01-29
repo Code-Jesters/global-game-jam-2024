@@ -12,10 +12,12 @@ public class PlayerDisplay : NetworkBehaviour
     private GameObject body;
     public NetworkVariable<int> emote = new NetworkVariable<int>();
 
+    int emoteAsApplied;
+
     // Start is called before the first frame update
     void Start()
     {
-        emote.OnValueChanged += ApplyEmoteColor;
+        //emote.OnValueChanged += ApplyEmoteColor;
         if (IsLocalPlayer)
         {
             int emoteValue = (int)GameManager.Instance.m_LocalUser.Emote.Value;
@@ -73,5 +75,10 @@ public class PlayerDisplay : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (emote.Value != emoteAsApplied)
+        {
+            ApplyEmoteColor(emoteAsApplied, emote.Value);
+            emoteAsApplied = emote.Value;
+        }
     }
 }
